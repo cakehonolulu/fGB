@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "cstdlib": "c",
-        "functional": "c",
-        "stdint.h": "c",
-        "random": "c",
-        "instructions.h": "c"
-    }
-}
