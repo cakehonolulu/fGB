@@ -1,5 +1,6 @@
 #include <cpu.h>
 #include <instruction_tables.h>
+#include <compiler.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,8 +31,44 @@ void fde(cpu_t *cpu)
 	}
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+	if (argc < 2)
+	{
+        printf("Usage: %s <args> ...\n", argv[0]);
+        return 1;
+    }
+
+	bool interpreter = false, jit = false;
+
+	for (int i = 1; i < argc; i++)
+	{
+        if (strcmp(argv[i], "-jit") == 0)
+		{
+			if (interpreter || jit)
+			{
+				printf("CPU Emulation Strategy already selected, ignoring argument...");
+			}
+			else
+			{
+            	printf("Running in JIT mode...!\n");
+				jit = true;
+			}
+        }
+		else if (strcmp(argv[i], "-interpreter") == 0)
+		{
+			if (interpreter || jit)
+			{
+				printf("CPU Emulation Strategy already selected, ignoring argument...");
+			}
+			else
+			{
+            	printf("Running in Interpreter mode...!\n");
+				interpreter = true;
+			}
+        }
+    }
+
 	FILE *bootrom = fopen("bootrom.bin", "ro");
 
 	if (bootrom == NULL)
@@ -49,11 +86,25 @@ int main(void)
 
 	fread(cpu.bootrom_buffer, sizeof(unsigned char), bootromsz, bootrom);
 
-	printf("Running\n");
-
-	while (1)
+	if (interpreter && !jit)
 	{
-		fde(&cpu);
+		while (1)
+		{
+			fde(&cpu);
+		}
+	}
+	else if (!interpreter && jit)
+	{
+		jit_t jit = jit_init(&cpu);
+
+		while (1)
+		{
+			jit_fde(&cpu);
+		}
+	}
+	else
+	{
+		printf("Wrong options, exiting...\n");
 	}
 
 	return 0;
