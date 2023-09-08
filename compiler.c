@@ -1,6 +1,7 @@
 #include <compiler.h>
 #include <emitter.h>
 #include <instruction_tables.h>
+#include <termui/colors.h>
 #include <Zydis/Zydis.h>
 #include <inttypes.h>
 #include <sys/mman.h>
@@ -34,7 +35,7 @@ void jit_fde(cpu_t *cpu)
 
 void jit_process_block(cpu_t *cpu)
 {
-    printf("Searching a block matching PC = %04X...\n", cpu->pc);
+    printf(BOLD "[" BLUE "*" NORMAL BOLD "] Searching for a compiled block where PC = $%04X..." NORMAL "\n", cpu->pc);
 
     bool found = false;
     uint8_t i = 0;
@@ -61,7 +62,7 @@ void jit_process_block(cpu_t *cpu)
     }
     else
     {
-        printf("Didn't find a block with PC = %04X, building a new block...\n", cpu->pc);
+        printf(BOLD "[" RED "-" NORMAL BOLD "] No block found for PC = $%04X, building a new one..." NORMAL "\n", cpu->pc);
     
         bool condition = false;
 
@@ -71,12 +72,16 @@ void jit_process_block(cpu_t *cpu)
 
         target_block = jit_process_instruction_block(cpu);
 
+#ifdef DEBUG
         printf("Emitting structure restoring bytecode...\n");
+#endif
 
         restore_cpu_struct(target_block, cpu);
 
         target_block->data[target_block->current_len++] = 0xC3; // RET
-        printf("Ended up processing a block...!\n");
+
+
+        printf(BOLD "[" GREEN "✓" NORMAL BOLD "] Ended up processing a block...!" NORMAL "\n");
         
 
         //printf("Trying to execute block (ID: %d)...\n", target_block->id);
@@ -87,6 +92,7 @@ void jit_process_block(cpu_t *cpu)
 
         printblock(&jit, target_block);
 
+#ifdef DEBUG
         printf("\nDumping block bytecode...\n");
 
         int j = 0;
@@ -97,6 +103,7 @@ void jit_process_block(cpu_t *cpu)
         }
 
         printf("\n");
+#endif
 
         jit_execute_block(cpu, target_block);
 
@@ -167,7 +174,9 @@ void restore_cpu_struct(jit_block_t *block, cpu_t *cpu)
 
 void jit_execute_block(cpu_t *cpu, jit_block_t *block)
 {
+#ifdef DEBUG
     printf("Allocating memory for the exec'd buffer...\n");
+#endif
     uint8_t *buffer = malloc(sizeof(uint8_t) * block->current_len);
 
     uint8_t j = 0;
@@ -184,8 +193,9 @@ void jit_execute_block(cpu_t *cpu, jit_block_t *block)
     }
     else
     {
-
-    printf("Allocated memory is now aligned\n");
+#ifdef DEBUG
+        printf("Allocated memory is now aligned\n");
+#endif
     }
 
     if (mprotect(buffer, sizeof(uint8_t) * block->current_len, PROT_READ | PROT_WRITE | PROT_EXEC) == -1) {
@@ -195,14 +205,21 @@ void jit_execute_block(cpu_t *cpu, jit_block_t *block)
     }
     else
     {
-
-    printf("Page permissions set correctly\n");
+#ifdef DEBUG
+        printf("Page permissions set correctly\n");
+#endif
     }
 
-    printf("Copying instructions...\n");
+#ifdef DEBUG
+        printf("Copying instructions...\n");
+#endif
+    
     memcpy(buffer, block->data, sizeof(uint8_t) * block->current_len);
 
+#ifdef DEBUG
     printf("Jumping to compiled code...\n\n\n");
+#endif
+
     // Cast the buffer to a function pointer and execute it
     void (*jitFunction)() = (void *) buffer;
     jitFunction();
@@ -212,18 +229,25 @@ jit_block_t *jit_process_instruction_block(cpu_t *cpu)
 {
     jit_block_t *target_block = jit_find_available_block(cpu);
 
-    printf("Starting to process instructions (PC: %04X)\n", cpu->pc);
+#ifdef DEBUG
+    printf("Starting to process instructions where PC: %04X\n", cpu->pc);
+#endif
 
     uint16_t saved_pc = cpu->pc;
 
-    bool cond = false;
+    bool is_branch_instr = false;
 
     uint8_t instr = 0;
 
-    while (!cond)
+    while (!is_branch_instr)
     {
         instr = cpu->bootrom_buffer[cpu->pc];
-        cond = jit_translate(instr, target_block, cpu);
+        is_branch_instr = jit_translate(instr, target_block, cpu);
+
+        if (is_branch_instr)
+        {
+            printf(BOLD BRIGHT_YELLOW BLACK "[" RED "!" BLACK "] " RED "Found a branching instruction!" NORMAL "\n");
+        }
     }
 
     return target_block;
@@ -231,8 +255,6 @@ jit_block_t *jit_process_instruction_block(cpu_t *cpu)
 
 jit_block_t *jit_find_available_block(cpu_t *cpu)
 {
-    printf("Searching for an available block...\n");
-
     bool found = false;
     uint8_t current_block = 0;
     jit_block_t *block = NULL;
@@ -241,14 +263,18 @@ jit_block_t *jit_find_available_block(cpu_t *cpu)
     {
         if (!jit.blocks[current_block].dirty)
         {
-            printf("Found a non-dirty and free block!\n");
+#ifdef DEBUG
+            printf("Found an available, non-dirty block emplacement!\n");
+#endif
             found = true;
             block = &jit.blocks[current_block];
             emit_caller(cpu, block);
         }
         else if (jit.blocks[current_block].current_len < MAX_BLOCKS)
         {
+#ifdef DEBUG
             printf("Found a dirty block, skipping!\n");
+#endif
         }
 
         current_block++;
@@ -259,7 +285,7 @@ jit_block_t *jit_find_available_block(cpu_t *cpu)
 
 void emit_caller(cpu_t *cpu, jit_block_t *block)
 {
-    printf("Emitting caller instructions in non-dirty block (Block ID: %d)...\n", block->id);
+    printf(BOLD "[" BLUE "*" NORMAL BOLD "] Emitting instructions for block (Block ID: %d)..." NORMAL "\n", block->id);
 
     // Set the block's identifying PC to the current one
     block->pc = cpu->pc;
@@ -315,19 +341,22 @@ void emit_caller(cpu_t *cpu, jit_block_t *block)
     EMIT(0x57);
     EMIT(0x08);
 
+#ifdef DEBUG
     printf("Space left for translated code: %d\n", BLOCK_SIZE - block->current_len);
+#endif
 
     block->dirty = true;
 }
 
 bool jit_translate(uint8_t instruction, jit_block_t *block, cpu_t *cpu)
 {
-    bool result = false;
+    bool is_branch_instr = false;
 
 	switch (instruction)
     {
         case 0x20:
-            result = true;
+            jit_emit_20(block, cpu);
+            is_branch_instr = true;
             break;
 
         case 0x21:
@@ -373,7 +402,7 @@ bool jit_translate(uint8_t instruction, jit_block_t *block, cpu_t *cpu)
             break;
     }
 
-    return result;
+    return is_branch_instr;
 }
 
 void printblocks(jit_t *jit)
@@ -430,7 +459,7 @@ void printblock(jit_t *jit, jit_block_t *block)
 
     printf("---------- BLOCK INFORMATION ----------\n");
 
-    printf("Block (ID: %d, Free Bytes: %d) Dump:\n", block->id, BLOCK_SIZE - block->current_len);
+    printf("Block (ID: %d, Free Bytes: %d):\n", block->id, BLOCK_SIZE - block->current_len);
 
     instruction_buffer = malloc(sizeof(ZyanU8) * block->current_len);
 
@@ -460,7 +489,30 @@ void printblock(jit_t *jit, jit_block_t *block)
         runtime_address += instruction.info.length;
     }
 
+    printf("\n");
+
     free(instruction_buffer);
+}
+
+void jit_emit_20(jit_block_t *block, cpu_t *cpu)
+{
+    printf("[JIT] JR NZ, %d\n", (int8_t) (cpu->bootrom_buffer[cpu->pc + 1]));
+
+    cpu->pc += 2;
+    cpu->pc += (int8_t) (cpu->bootrom_buffer[cpu->pc + 1]);
+
+        /*if (FLAG_CHECK(ZERO))
+	{
+		PC += 2;
+	}
+	else
+	{
+		// Set the PC Offset at the end of the JR NZ, s8
+		PC += 2;
+
+		// Add m_operand as an int8_t (Can go forward or backward)
+		PC += (int8_t) m_s8;	
+	}*/
 }
 
 void jit_emit_21(jit_block_t *block, cpu_t *cpu)
