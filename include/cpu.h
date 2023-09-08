@@ -47,3 +47,4 @@ typedef struct {
         unsigned char *bootrom_buffer;
 } cpu_t;
 
+void printregs(cpu_t *cpu);

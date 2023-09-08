@@ -81,6 +81,18 @@ int main(int argc, char *argv[])
 
 	cpu_t cpu = { 0 };
 
+#ifdef DEBUG
+	printf("Offset of AF in CPU is %zu\n", offsetof(cpu_t, af.af));
+	printf("Offset of BC in CPU is %zu\n", offsetof(cpu_t, bc.bc));
+	printf("Offset of HL in CPU is %zu\n", offsetof(cpu_t, hl.hl));
+	printf("Offset of PC in CPU is %zu\n", offsetof(cpu_t, pc));
+	printf("Offset of SP in CPU is %zu\n", offsetof(cpu_t, sp));
+	printf("Offset of Zero Flag in CPU is %zu\n", offsetof(cpu_t, zero));
+	printf("Offset of Negative Flag in CPU is %zu\n", offsetof(cpu_t, negative));
+	printf("Offset of Half Carry Flag in CPU is %zu\n", offsetof(cpu_t, halfcarry));
+	printf("Offset of Carry Flag in CPU is %zu\n", offsetof(cpu_t, carry));
+#endif
+
 	// Allocate a buffer for the program
 	cpu.bootrom_buffer = (unsigned char*) malloc(sizeof(unsigned char) * bootromsz);
 
