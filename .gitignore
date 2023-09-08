@@ -58,6 +58,7 @@ CMakeCache.txt
 CMakeFiles/
 fgb
 Makefile
+CMakeDoxyfile.in
 
 # other
 .vscode/
