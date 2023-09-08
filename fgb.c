@@ -1,5 +1,6 @@
 #include <cpu.h>
 #include <instruction_tables.h>
+#include <termui/colors.h>
 #include <compiler.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-            	printf("Running in JIT mode...!\n");
+            	printf(BOLD MAGENTA "Running in JIT mode...!\n" NORMAL);
 				jit = true;
 			}
         }
