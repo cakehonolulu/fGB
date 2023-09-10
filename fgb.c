@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
 		while (1)
 		{
-			jit_process_block(&cpu);
+			jit_process_block(&jit, &cpu);
 		}
 	}
 	else

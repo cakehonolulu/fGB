@@ -12,6 +12,8 @@ jit_t jit = { 0 };
 
 jit_t jit_init(cpu_t *cpu)
 {
+	(void) cpu;
+
 	// Allocate the blocks
 	jit.blocks = malloc(sizeof(jit_block_t) * MAX_BLOCKS);
 	memset(jit.blocks, 0, sizeof(jit_block_t) * MAX_BLOCKS);
@@ -26,18 +28,13 @@ jit_t jit_init(cpu_t *cpu)
 	return jit;
 }
 
-void jit_fde(cpu_t *cpu)
+void jit_process_block(jit_t *jit, cpu_t *cpu)
 {
 	/*
 		TODO: Lookup the block on the block array, maybe it exists
 		already (Need a way to map the start of the target block
 		to the host one to properly compare them).
 	*/
-   jit_process_block(cpu);
-}
-
-void jit_process_block(cpu_t *cpu)
-{
 	printf(BOLD "[" BLUE "*" NORMAL BOLD "] Searching for a compiled block where PC = $%04X..." NORMAL "\n", cpu->pc);
 
 	bool found = false;
@@ -47,10 +44,10 @@ void jit_process_block(cpu_t *cpu)
 
 	while (!found && i < MAX_BLOCKS)
 	{
-		if (jit.blocks[i].pc == cpu->pc)
+		if (jit->blocks[i].pc == cpu->pc)
 		{
 			found = true;
-			block = &jit.blocks[i];
+			block = &jit->blocks[i];
 		}
 
 		i++;
@@ -69,10 +66,6 @@ void jit_process_block(cpu_t *cpu)
 	else
 	{
 		printf(BOLD "[" RED "-" NORMAL BOLD "] No block found for PC = $%04X, building a new one..." NORMAL "\n", cpu->pc);
-	
-		bool condition = false;
-
-		uint16_t prev_pc = cpu->pc;
 
 		jit_block_t *target_block = NULL;
 
@@ -108,7 +101,7 @@ void jit_process_block(cpu_t *cpu)
 		printf(BOLD "[" BLUE "*" NORMAL BOLD "] Executing block (Block ID: %d)..." NORMAL "\n", target_block->id);
 		printf("\n");
 		
-		printblock(&jit, target_block);
+		printblock(jit, target_block);
 
 		jit_execute_block(cpu, target_block);
 
@@ -120,14 +113,58 @@ void dump_block_bytecode(jit_block_t *block)
 {
 	printf("\nDumping block bytecode...\n");
 
-	int j = 0;
-
-	for (j; j < block->current_len; j++)
+	for (int j = 0; j < block->current_len; j++)
 	{
 		printf("%02X ", block->data[j]);
 	}
 
 	printf("\n");
+}
+
+void jit_emit_prologue(cpu_t *cpu, jit_block_t *block)
+{
+	printf(BOLD "[" BLUE "*" NORMAL BOLD "] Emitting instructions for block (Block ID: %d)..." NORMAL "\n", block->id);
+
+	// Set the block's identifying PC to the current one
+	block->pc = cpu->pc;
+
+	// Map target registers to host registers if block is not dirty
+
+	// mov rdi, &cpu
+	movq_reg64_imm64(rdi, (uintptr_t) cpu);
+
+	/*
+		Register Allocation (x86_64):
+
+		Host                    Target
+		AX                      AF
+		BX                      BC
+		CX                      HL
+		High 32 bits RDX        PC 
+		Low 32 bits RDX         SP
+	*/
+
+	// AF
+	// mov ax, [rdi + 0]
+	movb_ax_indirect_reg64(rdi);
+
+	// BC
+	// mov bx, [rdi + 2]
+	movb_reg16_indirect_reg64_offset(bx, rdi, 2);
+
+	// HL
+	// mov cx, [rdi + 4]
+	movb_reg16_indirect_reg64_offset(cx, rdi, 4);
+
+	// SP
+	// mov edx, [rdi + 8]
+	movw_reg32_indirect_reg64_offset(edx, rdi, 8);
+
+#ifdef DEBUG
+	printf("Space left for translated code: %d\n", BLOCK_SIZE - block->current_len);
+#endif
+
+	block->dirty = true;
 }
 
 void jit_emit_epilogue(jit_block_t *block, cpu_t *cpu)
@@ -156,32 +193,22 @@ void jit_emit_epilogue(jit_block_t *block, cpu_t *cpu)
 
 		// AF
 		// mov [rdi + 0], ax
-		EMIT_BYTE(0x66);
-		EMIT_BYTE(0x89);
-		EMIT_BYTE(0x07);
+		movb_indirect_reg64_reg16(rdi, ax);
 
 		// BC
 		// mov [rdi + 2], bx
-		EMIT_BYTE(0x66);
-		EMIT_BYTE(0x89);
-		EMIT_BYTE(0x5F);
-		EMIT_BYTE(0x02);
+		movb_indirect_reg64_offset_reg16(rdi, 2, bx);
 
 		// HL
 		// mov [rdi + 4], cx
-		EMIT_BYTE(0x66);
-		EMIT_BYTE(0x89);
-		EMIT_BYTE(0x4F);
-		EMIT_BYTE(0x04);
+		movb_indirect_reg64_offset_reg16(rdi, 4, cx);
 
 		// SP
 		// mov [rdi + 8], edx
-		EMIT_BYTE(0x89);
-		EMIT_BYTE(0x57);
-		EMIT_BYTE(0x08);
+		movw_indirect_reg64_offset_reg32(rdi, 8, edx);
 
 		// RET
-		EMIT_BYTE(0xC3);
+		RET();
 	}
 }
 
@@ -190,6 +217,9 @@ void jit_execute_block(cpu_t *cpu, jit_block_t *block)
 #ifdef DEBUG
 	printf("Allocating memory for the exec'd buffer...\n");
 #endif
+
+	(void) cpu;
+
 	uint8_t *buffer = malloc(sizeof(uint8_t) * block->current_len);
 
 	uint8_t j = 0;
@@ -248,8 +278,6 @@ jit_block_t *jit_process_instruction_block(cpu_t *cpu)
 	printf("Starting to process instructions where PC: %04X\n", cpu->pc);
 #endif
 
-	uint16_t saved_pc = cpu->pc;
-
 	bool is_branch_instr = false;
 
 	uint8_t instr = 0;
@@ -296,56 +324,6 @@ jit_block_t *jit_find_available_block(cpu_t *cpu)
 	}
 
 	return block;
-}
-
-void jit_emit_prologue(cpu_t *cpu, jit_block_t *block)
-{
-	printf(BOLD "[" BLUE "*" NORMAL BOLD "] Emitting instructions for block (Block ID: %d)..." NORMAL "\n", block->id);
-
-	// Set the block's identifying PC to the current one
-	block->pc = cpu->pc;
-
-	// Map target registers to host registers if block is not dirty
-
-	// mov rdi, &cpu
-	movq_reg64_imm64(rdi, (uintptr_t) cpu);
-
-	/*
-		Register Allocation (x86_64):
-
-		Host                    Target
-		AX                      AF
-		BX                      BC
-		CX                      HL
-		High 32 bits RDX        PC 
-		Low 32 bits RDX         SP
-	*/
-
-	// AF
-	// mov ax, [rdi + 0]
-	EMIT_BYTE(0x66);
-	EMIT_BYTE(0x8B);
-	EMIT_BYTE(0x07);
-
-	// BC
-	// mov bx, [rdi + 2]
-	movb_reg16_indirect_reg64_offset(bx, rdi, 2);
-
-	// HL
-	// mov cx, [rdi + 4]
-	movb_reg16_indirect_reg64_offset(cx, rdi, 4);
-	
-	// SP
-	// mov edx, [rdi + 8]
-	EMIT_BYTE(0x8B);
-	EMIT_BYTE(0x57);
-	EMIT_BYTE(0x08);
-
-#ifdef DEBUG
-	printf("Space left for translated code: %d\n", BLOCK_SIZE - block->current_len);
-#endif
-
-	block->dirty = true;
 }
 
 bool jit_translate(uint8_t instruction, jit_block_t *block, cpu_t *cpu)
@@ -455,6 +433,8 @@ void printblocks(jit_t *jit)
 
 void printblock(jit_t *jit, jit_block_t *block)
 {
+	(void) jit;
+
 	ZyanU8 *instruction_buffer = NULL;
 
 	printf("---------- BLOCK INFORMATION ----------\n");
@@ -496,6 +476,8 @@ void printblock(jit_t *jit, jit_block_t *block)
 
 void jit_emit_20(jit_block_t *block, cpu_t *cpu)
 {
+	(void) block;
+
 	printf("[JIT] " BOLD" $%04X " NORMAL" JR NZ, %d (Dummy)\n", cpu->pc, ((int8_t) (cpu->bootrom_buffer[cpu->pc + 1])));
 
 	/*

@@ -8,6 +8,8 @@ set(CMAKE_C_FLAGS_RELEASE "-Wall -Wextra -O2")
 
 option(ZYDIS_BUILD_TOOLS "" OFF)
 option(ZYDIS_BUILD_EXAMPLES "" OFF)
+option(ZYDIS_BUILD_MAN "" OFF)
+option(ZYDIS_BUILD_DOXYGEN "" OFF)
 add_subdirectory("external/zydis")
 
 if (ASAN)
@@ -15,7 +17,7 @@ add_compile_options(-fsanitize=address -g)
 add_link_options(-fsanitize=address)
 endif()
 
-add_compile_options(-g -Iinclude -Wall -Wextra)
+add_compile_options(-g -Iinclude -std=c2x -Wall -Wextra)
 
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/*.c)
 
