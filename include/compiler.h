@@ -30,11 +30,12 @@ void jit_process_block(cpu_t *cpu);
 void jit_execute_block(cpu_t *cpu, jit_block_t *block);
 jit_block_t *jit_process_instruction_block(cpu_t *cpu);
 jit_block_t *jit_find_available_block(cpu_t *cpu);
-void emit_caller(cpu_t *cpu, jit_block_t *block);
+void jit_emit_prologue(cpu_t *cpu, jit_block_t *block);
+void jit_emit_epilogue(jit_block_t *block, cpu_t *cpu);
 bool jit_translate(uint8_t instruction, jit_block_t *block, cpu_t *cpu);
 void printblocks(jit_t *jit);
 void printblock(jit_t *jit, jit_block_t *block);
-void restore_cpu_struct(jit_block_t *block, cpu_t *cpu);
+void jit_emit_bytes(jit_block_t *block, int size, ...);
 
 /* Instructions */
 void jit_emit_21(jit_block_t *block, cpu_t *cpu);

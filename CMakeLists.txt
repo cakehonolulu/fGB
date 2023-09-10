@@ -15,7 +15,7 @@ add_compile_options(-fsanitize=address -g)
 add_link_options(-fsanitize=address)
 endif()
 
-add_compile_options(-g -Iinclude)
+add_compile_options(-g -Iinclude -Wall -Wextra)
 
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/*.c)
 
