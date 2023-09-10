@@ -56,7 +56,10 @@ void jit_process_block(cpu_t *cpu)
     if (found)
     {
         // Execute block
-        printf("Block with matching PC found (Block ID: %d), executing...\n", block->id);
+        printf(BOLD "[" GREEN "✓" NORMAL BOLD "] Block with matching PC found (Block ID: %d), executing...!" NORMAL "\n", block->id);
+
+        //jit_execute_block(cpu, block);
+
         printregs(cpu);
         exit(1);
     }
@@ -86,11 +89,8 @@ void jit_process_block(cpu_t *cpu)
 
         //printf("Trying to execute block (ID: %d)...\n", target_block->id);
 
-        printf("\n");
         //printregs(cpu);
         //printblocks(&jit);
-
-        printblock(&jit, target_block);
 
 #ifdef DEBUG
         printf("\nDumping block bytecode...\n");
@@ -104,6 +104,11 @@ void jit_process_block(cpu_t *cpu)
 
         printf("\n");
 #endif
+
+        printf(BOLD "[" BLUE "*" NORMAL BOLD "] Executing block (Block ID: %d)..." NORMAL "\n", target_block->id);
+        printf("\n");
+        
+        printblock(&jit, target_block);
 
         jit_execute_block(cpu, target_block);
 
@@ -223,6 +228,8 @@ void jit_execute_block(cpu_t *cpu, jit_block_t *block)
     // Cast the buffer to a function pointer and execute it
     void (*jitFunction)() = (void *) buffer;
     jitFunction();
+
+    printf(BOLD "[" GREEN "✓" NORMAL BOLD "] Block (Block ID: %d) executed successfully!" NORMAL "\n", block->id);
 }
 
 jit_block_t *jit_process_instruction_block(cpu_t *cpu)
@@ -368,7 +375,7 @@ bool jit_translate(uint8_t instruction, jit_block_t *block, cpu_t *cpu)
             break;
 
         case 0x32:
-            printf("[JIT] LD (HL-), A (Dummy)\n");
+            printf("[JIT] " BOLD" $%04X " NORMAL" LD (HL-), A (Dummy)\n", cpu->pc);
             cpu->pc++;
             break;
 
@@ -380,7 +387,7 @@ bool jit_translate(uint8_t instruction, jit_block_t *block, cpu_t *cpu)
             switch (cpu->bootrom_buffer[cpu->pc + 1])
             {
                 case 0x7C:
-                    printf("[JIT] BIT 7, H (Dummy)\n");
+                    printf("[JIT] " BOLD" $%04X " NORMAL" BIT 7, H (Dummy)\n", cpu->pc);
                     cpu->pc++;
                     break;
 
@@ -496,10 +503,17 @@ void printblock(jit_t *jit, jit_block_t *block)
 
 void jit_emit_20(jit_block_t *block, cpu_t *cpu)
 {
-    printf("[JIT] JR NZ, %d\n", (int8_t) (cpu->bootrom_buffer[cpu->pc + 1]));
+    printf("[JIT] " BOLD" $%04X " NORMAL" JR NZ, %d (Dummy)\n", cpu->pc, ((int8_t) (cpu->bootrom_buffer[cpu->pc + 1])));
+
+    /*
+        TODO: Check (And maybe chain?) blocks if the jump is relative (For loops or while loops)
+        to avoid going through the dispatcher again and again
+    */
+
+    int8_t displacement = (int8_t) (cpu->bootrom_buffer[cpu->pc + 1]);
 
     cpu->pc += 2;
-    cpu->pc += (int8_t) (cpu->bootrom_buffer[cpu->pc + 1]);
+    cpu->pc += displacement;
 
         /*if (FLAG_CHECK(ZERO))
 	{
@@ -517,7 +531,7 @@ void jit_emit_20(jit_block_t *block, cpu_t *cpu)
 
 void jit_emit_21(jit_block_t *block, cpu_t *cpu)
 {
-    printf("[JIT] LD HL, %04X\n", (uint16_t) (((cpu->bootrom_buffer[cpu->pc + 2] << 8) | (cpu->bootrom_buffer[cpu->pc + 1]))));
+    printf("[JIT] " BOLD" $%04X " NORMAL" LD HL, %04X\n", cpu->pc, (uint16_t) (((cpu->bootrom_buffer[cpu->pc + 2] << 8) | (cpu->bootrom_buffer[cpu->pc + 1]))));
 
     // mov cx, u16
     EMIT(0x66);
@@ -530,7 +544,7 @@ void jit_emit_21(jit_block_t *block, cpu_t *cpu)
 
 void jit_emit_31(jit_block_t *block, cpu_t *cpu)
 {
-    printf("[JIT] LD SP, %04X\n", (uint16_t) (((cpu->bootrom_buffer[cpu->pc + 2] << 8) | (cpu->bootrom_buffer[cpu->pc + 1]))));
+    printf("[JIT] " BOLD" $%04X " NORMAL" LD SP, %04X\n", cpu->pc, (uint16_t) (((cpu->bootrom_buffer[cpu->pc + 2] << 8) | (cpu->bootrom_buffer[cpu->pc + 1]))));
 
     // mov edx, u16
     EMIT(0xBA);
@@ -544,7 +558,7 @@ void jit_emit_31(jit_block_t *block, cpu_t *cpu)
 
 void jit_emit_AF(jit_block_t *block, cpu_t *cpu)
 {
-    printf("[JIT] XOR A, A\n");
+    printf("[JIT] " BOLD" $%04X " NORMAL" XOR A, A\n", cpu->pc);
 
     // xor ah, ah
     EMIT(0x30);
