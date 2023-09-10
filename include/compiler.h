@@ -26,7 +26,7 @@ typedef struct {
 
 jit_t jit_init(cpu_t *cpu);
 void jit_fde(cpu_t *cpu);
-void jit_process_block(cpu_t *cpu);
+void jit_process_block(jit_t *jit, cpu_t *cpu);
 void jit_execute_block(cpu_t *cpu, jit_block_t *block);
 jit_block_t *jit_process_instruction_block(cpu_t *cpu);
 jit_block_t *jit_find_available_block(cpu_t *cpu);
@@ -38,6 +38,7 @@ void printblock(jit_t *jit, jit_block_t *block);
 void jit_emit_bytes(jit_block_t *block, int size, ...);
 
 /* Instructions */
+void jit_emit_20(jit_block_t *block, cpu_t *cpu);
 void jit_emit_21(jit_block_t *block, cpu_t *cpu);
 void jit_emit_31(jit_block_t *block, cpu_t *cpu);
 void jit_emit_AF(jit_block_t *block, cpu_t *cpu);
