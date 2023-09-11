@@ -30,7 +30,16 @@ int main(int argc, char *argv[])
 
 	if (enable_jit)
 	{
-		Compiler *jit_compiler = new Compiler();
+		//Compiler *jit_compiler = new Compiler();
+		JitBlock block = JitBlock();
+
+		
+		block.mov(Xbyak::util::rax, 42);
+	    block.ret();
+
+		int result = block.execute();
+		std::cout << "Result of executed code: " << result << std::endl;
+		block.disassemble();
 	}
 	else
 	{

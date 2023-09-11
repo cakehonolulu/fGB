@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(fGB)
 
+include(FindPkgConfig)
+
+pkg_check_modules (CAPSTONE REQUIRED capstone)
+
 set(CMAKE_C_FLAGS_DEBUG "-Wall -Wextra -g")
 set(CMAKE_C_FLAGS_MINSIZEREL "-Wall -Wextra -O0")
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-Wall -Wextra -g -O2")
@@ -11,7 +15,7 @@ add_compile_options(-fsanitize=address -g)
 add_link_options(-fsanitize=address)
 endif()
 
-add_compile_options(-g -Iinclude -Wall -Wextra)
+add_compile_options(-g -Iinclude -Iexternal/zbyak -Wall -Wextra)
 
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/*.c)
 
@@ -35,3 +39,4 @@ foreach (TMP_PATH ${SRC_FILES})
 endforeach(TMP_PATH)
 
 add_executable(fgb ${SRC_FILES})
+target_link_libraries(fgb ${CAPSTONE_LIBRARIES})

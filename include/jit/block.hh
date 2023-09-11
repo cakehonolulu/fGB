@@ -1,20 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <xbyak/xbyak.h>
 
 #define BLOCK_SZ_SAFE   128
 
 #define BLOCK_SIZE      BLOCK_SZ_SAFE
 
-class JitBlock {
+class JitBlock : public Xbyak::CodeGenerator {
 
 private:
-    // Pointer to the memory block containing the translated instructions
-    uintptr_t *data;
-
-    // The current block length
-    uint8_t current_len;
-
     // The Program Counter value that identifies the block
     uint16_t pc;
 
@@ -31,4 +26,12 @@ public:
     JitBlock (uint8_t id_, uint16_t pc_);
 
     ~JitBlock();
+
+    int execute();
+
+    size_t get_size();
+
+    const uint8_t *get_location();
+
+    void disassemble();
 };
