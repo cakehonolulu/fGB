@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <jit/block.hh>
+#include <jit/compiler.hh>
 #include <fgb.hh>
 
 int main(int argc, char *argv[])
@@ -24,6 +26,15 @@ int main(int argc, char *argv[])
 				enable_jit = true;
 			}
 		}
+	}
+
+	if (enable_jit)
+	{
+		Compiler *jit_compiler = new Compiler();
+	}
+	else
+	{
+		std::cout << BOLDRED << "Interpreter mode under construction..." << RESET << "\n";
 	}
 
 	return 0;
