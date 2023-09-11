@@ -1,7 +1,11 @@
 #pragma once
 
 #include <cstdint>
-#include "block.hh"
+#include <iostream>
+#include <jit/emitter.hh>
+#include <jit/block.hh>
+#include <cpu.hh>
+#include <vector>
 
 #define BLOCK_COUNT_SZ_SAFE 16
 #define BLOCK_COUNT         BLOCK_COUNT_SZ_SAFE
@@ -17,7 +21,13 @@ private:
 
 public:
 
-    Compiler ();
+    Compiler();
 
     ~Compiler();
+
+    void run(Cpu *cpu, Emitter *emitter, std::vector<char> *bootrom);
+
+    JitBlock *jit_find_compiled_block(std::uint16_t pc);
+
+    JitBlock *jit_find_available_block();
 };

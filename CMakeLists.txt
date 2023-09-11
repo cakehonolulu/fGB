@@ -15,7 +15,7 @@ add_compile_options(-fsanitize=address -g)
 add_link_options(-fsanitize=address)
 endif()
 
-add_compile_options(-g -Iinclude -Iexternal/zbyak -Wall -Wextra)
+add_compile_options(-g -Iinclude -Iexternal/zbyak -Wall -Wextra -std=c++2b)
 
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/*.c)
 

@@ -1,8 +1,11 @@
-#include <iostream>
-#include <string>
 #include <jit/block.hh>
 #include <jit/compiler.hh>
 #include <fgb.hh>
+#include <cpu.hh>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <fstream>
 
 int main(int argc, char *argv[])
 {
@@ -28,18 +31,50 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	Cpu cpu = Cpu();
+	
+	// Specify the file path
+    const std::string filePath = "bootrom.bin";
+
+    // Open the file in binary mode
+    std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filePath << std::endl;
+        return 1;
+    }
+
+    // Get the file size
+    std::streampos fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+
+    // Create a vector to store the file contents
+    std::vector<char> fileData(fileSize);
+
+    // Read the file into the vector
+    if (!file.read(fileData.data(), fileSize)) {
+        std::cerr << "Failed to read file: " << filePath << std::endl;
+        return 1;
+    }
+
+    // Close the file
+    file.close();
+
 	if (enable_jit)
 	{
-		//Compiler *jit_compiler = new Compiler();
-		JitBlock block = JitBlock();
+		Compiler *jit_compiler = new Compiler();
+		Emitter emitter = Emitter();
 
-		
-		block.mov(Xbyak::util::rax, 42);
+		//exit(1);
+
+		jit_compiler->run(&cpu, &emitter, &fileData);
+
+		/*block.mov(Xbyak::util::rax, 42);
 	    block.ret();
 
 		int result = block.execute();
 		std::cout << "Result of executed code: " << result << std::endl;
-		block.disassemble();
+		block.disassemble();*/
 	}
 	else
 	{

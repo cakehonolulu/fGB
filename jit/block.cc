@@ -1,12 +1,22 @@
 #include <jit/block.hh>
 #include <capstone/capstone.h>
+#include <fgb.hh>
+
+#if __has_include(<format>)
+    #include <format>
+    using std::format;
+#else
+    #include <fmt/format.h>
+    using fmt::format;
+#endif
 
 int current_id = 0;
 
 JitBlock :: JitBlock()
 {
 	pc = 0xFFFF;
-	id = current_id++;
+	id = (uint16_t) rand();
+	dirty = false;
 }
 
 JitBlock :: JitBlock(uint8_t id_, uint16_t pc_)
@@ -15,6 +25,30 @@ JitBlock :: JitBlock(uint8_t id_, uint16_t pc_)
 }
 
 JitBlock :: ~JitBlock() {
+}
+
+bool JitBlock :: is_dirty() {
+	return dirty;
+}
+
+void JitBlock :: set_dirty(bool dirty_) {
+	dirty = dirty_;
+}
+
+std::uint16_t JitBlock :: get_pc() {
+	return pc;
+}
+
+void JitBlock :: set_pc(std::uint16_t pc_) {
+	pc = pc_;
+}
+
+std::uint16_t JitBlock :: get_id() {
+	return id;
+}
+
+void JitBlock :: set_id(std::uint16_t id_) {
+	id = id_;
 }
 
 int JitBlock :: execute() {
@@ -37,6 +71,10 @@ void JitBlock :: disassemble() {
 	cs_insn* insn;
 	size_t count;
 
+	std::cout << "\n-------- BLOCK  INFORMATION --------\n";
+	std::cout << "     Block ID: " << get_id() << ", PC: " << format("{:#06x}", get_pc()) << "\n";
+	std::cout << "------------------------------------\n";
+
 	if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK) {
 		std::cerr << "Failed to initialize Capstone" << std::endl;
 		return;
@@ -58,6 +96,8 @@ void JitBlock :: disassemble() {
 	} else {
 		std::cerr << "Failed to disassemble code" << std::endl;
 	}
+
+	std::cout << "------------------------------------\n\n";
 
 	// Close the Capstone disassembler
 	cs_close(&handle);
