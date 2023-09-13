@@ -1,14 +1,14 @@
 #pragma once
 
 #include <jit/block.hh>
-#include <jit/instructions.hh>
+#include <mmu.hh>
 #include <cpu.hh>
 #include <cstdint>
 #include <vector>
 
 class Emitter {
 
-    typedef bool (Emitter::*Instruction_)(JitBlock *, Cpu *, std::vector<char> *);
+    typedef bool (Emitter::*Instruction_)(JitBlock *, Cpu *, Mmu *);
 
     struct Instruction {
         Instruction_ func;
@@ -56,24 +56,24 @@ public:
         /* F0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     }
     };
     
-    void jit_compile_block(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
+    void jit_compile_block(JitBlock *block, Cpu *cpu, Mmu *mmu);
 
-    void jit_emit_prologue(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
+    void jit_emit_prologue(JitBlock *block, Cpu *cpu, Mmu *mmu);
 
-    void jit_emit_epilogue(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
+    void jit_emit_epilogue(JitBlock *block, Cpu *cpu, Mmu *mmu);
 
-    bool jit_process_opcode(std::uint8_t opcode, JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
+    bool jit_process_opcode(std::uint8_t opcode, JitBlock *block, Cpu *cpu, Mmu *mmu);
 
-    bool jit_process_extended_opcode(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
+    bool jit_process_extended_opcode(JitBlock *block, Cpu *cpu, Mmu *mmu);
 
 
-    bool instr_0e(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
-    bool instr_20(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
-    bool instr_21(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
-    bool instr_31(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
-    bool instr_32(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
-    bool instr_3e(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
-    bool instr_af(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
-    bool instr_e2(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
-    bool instr_cb7c(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
+    bool instr_0e(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_20(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_21(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_31(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_32(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_3e(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_af(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_e2(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_cb7c(JitBlock *block, Cpu *cpu, Mmu *mmu);
 };

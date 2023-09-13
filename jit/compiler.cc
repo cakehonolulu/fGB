@@ -1,5 +1,6 @@
 #include <jit/compiler.hh>
 #include <jit/emitter.hh>
+#include <mmu.hh>
 #include <fgb.hh>
 #include <vector>
 #include <bitset>
@@ -22,7 +23,7 @@ Compiler :: ~Compiler() {
 	delete blocks;
 }
 
-void Compiler :: run(Cpu *cpu, Emitter *emitter, std::vector<char> *bootrom) {
+void Compiler :: run(Cpu *cpu, Emitter *emitter, Mmu *mmu) {
     
     JitBlock *block = NULL;
 
@@ -48,7 +49,7 @@ void Compiler :: run(Cpu *cpu, Emitter *emitter, std::vector<char> *bootrom) {
             {
                 std::uint16_t pc = cpu->get_pc();
 
-                emitter->jit_compile_block(new_block, cpu, bootrom);
+                emitter->jit_compile_block(new_block, cpu, mmu);
 
                 cpu->set_pc(pc);
 

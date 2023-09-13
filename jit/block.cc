@@ -10,8 +10,6 @@
     using fmt::format;
 #endif
 
-int current_id = 0;
-
 JitBlock :: JitBlock()
 {
 	pc = 0xFFFF;

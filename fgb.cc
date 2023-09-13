@@ -2,6 +2,7 @@
 #include <jit/compiler.hh>
 #include <fgb.hh>
 #include <cpu.hh>
+#include <mmu.hh>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -31,7 +32,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	Cpu cpu = Cpu();
 	
 	// Specify the file path
     const std::string filePath = "bootrom.bin";
@@ -60,6 +60,9 @@ int main(int argc, char *argv[])
     // Close the file
     file.close();
 
+	Cpu cpu = Cpu();
+	Mmu mmu = Mmu(&fileData);
+
 	if (enable_jit)
 	{
 		Compiler *jit_compiler = new Compiler();
@@ -67,7 +70,7 @@ int main(int argc, char *argv[])
 
 		//exit(1);
 
-		jit_compiler->run(&cpu, &emitter, &fileData);
+		jit_compiler->run(&cpu, &emitter, &mmu);
 
 		/*block.mov(Xbyak::util::rax, 42);
 	    block.ret();

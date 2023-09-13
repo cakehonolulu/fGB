@@ -4,6 +4,7 @@
 #include <iostream>
 #include <jit/emitter.hh>
 #include <jit/block.hh>
+#include <mmu.hh>
 #include <cpu.hh>
 #include <vector>
 
@@ -25,7 +26,7 @@ public:
 
     ~Compiler();
 
-    void run(Cpu *cpu, Emitter *emitter, std::vector<char> *bootrom);
+    void run(Cpu *cpu, Emitter *emitter, Mmu *mmu);
 
     JitBlock *jit_find_compiled_block(std::uint16_t pc);
 

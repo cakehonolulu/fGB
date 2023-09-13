@@ -1,5 +1,6 @@
 #include <jit/emitter.hh>
 #include <jit/block.hh>
+#include <mmu.hh>
 #include <vector>
 #include <xbyak/xbyak.h>
 #include <fgb.hh>
@@ -15,7 +16,7 @@ using namespace Xbyak::util;
     using fmt::format;
 #endif
 
-void Emitter :: jit_compile_block(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+void Emitter :: jit_compile_block(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 
     std::cout << "[" << BOLDBLUE << "*" << RESET << "] Emitting instructions...\n";
 
@@ -24,18 +25,18 @@ void Emitter :: jit_compile_block(JitBlock *block, Cpu *cpu, std::vector<char> *
 
 	bool branch_found = false;
 
-    jit_emit_prologue(block, cpu, bootrom);
+    jit_emit_prologue(block, cpu, mmu);
 
 	std::uint8_t instruction;
 
 	while (!branch_found)
 	{
-		instruction = bootrom->at(cpu->get_pc());
+		instruction = mmu->read_byte(cpu->get_pc());
 
-    	branch_found = jit_process_opcode(instruction, block, cpu, bootrom);
+    	branch_found = jit_process_opcode(instruction, block, cpu, mmu);
 	}
 
-	jit_emit_epilogue(block, cpu, bootrom);
+	jit_emit_epilogue(block, cpu, mmu);
 
     block->disassemble();
 
@@ -43,14 +44,14 @@ void Emitter :: jit_compile_block(JitBlock *block, Cpu *cpu, std::vector<char> *
 }
 
 
-bool Emitter :: jit_process_opcode(std::uint8_t opcode, JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: jit_process_opcode(std::uint8_t opcode, JitBlock *block, Cpu *cpu, Mmu *mmu) {
     bool branch_found = false;
 
 	Instruction_ func = instructions[opcode].func;
 
     if (func != NULL)
     {
-        branch_found = (this->*instructions[opcode].func)(block, cpu, bootrom);
+        branch_found = (this->*instructions[opcode].func)(block, cpu, mmu);
     }
 	else
 	{
@@ -67,22 +68,22 @@ bool Emitter :: jit_process_opcode(std::uint8_t opcode, JitBlock *block, Cpu *cp
 }
 
 
-bool Emitter :: jit_process_extended_opcode(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: jit_process_extended_opcode(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	bool branch_found = false;
 
 	cpu->set_pc(cpu->get_pc() + 1);
 
 	block->inc(dx);
 
-	Instruction_ func = extended_instructions[bootrom->at(cpu->get_pc())].func;
+	Instruction_ func = extended_instructions[mmu->read_byte(cpu->get_pc())].func;
 	
     if (func != NULL)
     {	
-        branch_found = (this->*extended_instructions[bootrom->at(cpu->get_pc())].func)(block, cpu, bootrom);
+        branch_found = (this->*extended_instructions[mmu->read_byte(cpu->get_pc())].func)(block, cpu, mmu);
     }
 	else
 	{
-        std::cout << BOLDRED << "execute: Extended Instruction " << format("{:#04x}", bootrom->at(cpu->get_pc())) << " unimplemented!" << RESET << std::endl;
+        std::cout << BOLDRED << "execute: Extended Instruction " << format("{:#04x}", mmu->read_byte(cpu->get_pc())) << " unimplemented!" << RESET << std::endl;
 		
 		block->disassemble();
 
@@ -95,7 +96,7 @@ bool Emitter :: jit_process_extended_opcode(JitBlock *block, Cpu *cpu, std::vect
 }
 
 
-void Emitter :: jit_emit_prologue(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+void Emitter :: jit_emit_prologue(JitBlock *block, Cpu *cpu, Mmu *mmu) {
     /*
 		Register Allocation (x86_64):
 
@@ -128,7 +129,7 @@ void Emitter :: jit_emit_prologue(JitBlock *block, Cpu *cpu, std::vector<char> *
 	block->mov(r8w, ptr [rdi + 8]);
 }
 
-void Emitter :: jit_emit_epilogue(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+void Emitter :: jit_emit_epilogue(JitBlock *block, Cpu *cpu, Mmu *mmu) {
     /*
 		Register Allocation (x86_64):
 
@@ -165,8 +166,8 @@ void Emitter :: jit_emit_epilogue(JitBlock *block, Cpu *cpu, std::vector<char> *
 	block->ret();
 }
 
-bool Emitter :: instr_0e(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
-	std::int8_t d8 = (bootrom->at(cpu->get_pc() + 1));
+bool Emitter :: instr_0e(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+	std::int8_t d8 = (mmu->read_byte(cpu->get_pc() + 1));
 
 	std::cout << BOLDBLUE << "[JIT] C, $" << format("{:02X}", d8) << RESET << "\n";
 
@@ -178,8 +179,9 @@ bool Emitter :: instr_0e(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) 
 
 	return false;
 }
-bool Emitter :: instr_20(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
-	int displacement = (bootrom->at(cpu->get_pc() + 1));
+bool Emitter :: instr_20(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+
+	int displacement = ((std::int8_t) mmu->read_byte(cpu->get_pc() + 1));
 
 	std::cout << BOLDBLUE << "[JIT] JR NZ, " << displacement << RESET << "\n";
 
@@ -203,11 +205,11 @@ bool Emitter :: instr_20(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) 
 	return true;
 }
 
-bool Emitter :: instr_21(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: instr_21(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD HL, $" << format("{:02X}",
-		(std::uint16_t) (((0xFF & bootrom->at(cpu->get_pc() + 2)) << 8) | (0xFF & bootrom->at(cpu->get_pc() + 1)))) << RESET << std::endl;
+		(std::uint16_t) (((0xFF & mmu->read_byte(cpu->get_pc() + 2)) << 8) | (0xFF & mmu->read_byte(cpu->get_pc() + 1)))) << RESET << std::endl;
 	
-	block->mov(cx, (std::uint16_t) (((0xFF & bootrom->at(cpu->get_pc() + 2)) << 8) | (0xFF & bootrom->at(cpu->get_pc() + 1))));
+	block->mov(cx, (std::uint16_t) (((0xFF & mmu->read_byte(cpu->get_pc() + 2)) << 8) | (0xFF & mmu->read_byte(cpu->get_pc() + 1))));
 
 	cpu->set_pc(cpu->get_pc() + 3);
 
@@ -215,18 +217,18 @@ bool Emitter :: instr_21(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) 
 	return false;
 }
 
-bool Emitter :: instr_31(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: instr_31(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD SP, $" << format("{:02X}",
-		(std::uint16_t) (((0xFF & bootrom->at(cpu->get_pc() + 2)) << 8) | (0xFF & bootrom->at(cpu->get_pc() + 1)))) << RESET << std::endl;
+		(std::uint16_t) (((0xFF & mmu->read_byte(cpu->get_pc() + 2)) << 8) | (0xFF & mmu->read_byte(cpu->get_pc() + 1)))) << RESET << std::endl;
 	
-	block->mov(r8w, (std::uint16_t) (((0xFF & bootrom->at(cpu->get_pc() + 2)) << 8) | (0xFF & bootrom->at(cpu->get_pc() + 1))));
+	block->mov(r8w, (std::uint16_t) (((0xFF & mmu->read_byte(cpu->get_pc() + 2)) << 8) | (0xFF & mmu->read_byte(cpu->get_pc() + 1))));
 
 	cpu->set_pc(cpu->get_pc() + 3);
 	block->add(dx, 3);
 	return false;
 }
 
-bool Emitter :: instr_32(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: instr_32(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD (HL-), A" << RESET << std::endl;
 
 	block->dec(cx);
@@ -236,18 +238,18 @@ bool Emitter :: instr_32(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) 
 	return false;
 }
 
-bool Emitter :: instr_3e(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: instr_3e(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD A, $" << format("{:02X}",
-		(std::uint8_t) ((0xFF & bootrom->at(cpu->get_pc() + 1)))) << RESET << std::endl;
+		(std::uint8_t) ((0xFF & mmu->read_byte(cpu->get_pc() + 1)))) << RESET << std::endl;
 	
-	block->mov(ah, (std::uint8_t) ((0xFF & bootrom->at(cpu->get_pc() + 1))));
+	block->mov(ah, (std::uint8_t) ((0xFF & mmu->read_byte(cpu->get_pc() + 1))));
 
 	cpu->set_pc(cpu->get_pc() + 2);
 	block->add(dx, 2);
 	return false;
 }
 
-bool Emitter :: instr_af(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: instr_af(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] XOR A, A" << RESET << std::endl;
 	
 	block->xor_(ah, ah);
@@ -268,13 +270,13 @@ bool Emitter :: instr_af(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) 
 	return false;
 }
 
-bool Emitter :: instr_e2(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: instr_e2(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD (C), A" << RESET << std::endl;
 	
 
 	cpu->set_pc(cpu->get_pc() + 1);
 	block->inc(dx);
-	
+
 	return false;
 }
 
@@ -287,7 +289,7 @@ void debug(JitBlock *block)
     block->syscall();
 }
 
-bool Emitter :: instr_cb7c(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: instr_cb7c(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] BIT 7, H" << RESET << std::endl;
 
 	// Test bit 7 of CH (Maps to H)
