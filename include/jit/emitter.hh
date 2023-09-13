@@ -18,10 +18,10 @@ public:
 
     const Instruction instructions[256] = {
         /*          +0	      +1	       +2	        +3	      +4	    +5	      +6	    +7	      +8	    +9	      +A	    +B	         +C	       +D	     +E	       +F      */
-        /* 00+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { &Emitter::instr_0E }, { NULL     },
+        /* 00+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { &Emitter::instr_0e }, { NULL     },
         /* 10+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 20+ */ { &Emitter::instr_20 }, { &Emitter::instr_21 }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* 30+ */ { NULL }, { &Emitter::instr_31 }, { &Emitter::instr_32 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
+        /* 30+ */ { NULL }, { &Emitter::instr_31 }, { &Emitter::instr_32 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { &Emitter::instr_3e }, { NULL     },
         /* 40+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 50+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 60+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
@@ -32,7 +32,7 @@ public:
         /* B0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* C0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { &Emitter::jit_process_extended_opcode    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* D0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* E0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
+        /* E0+ */ { NULL }, { NULL     }, { &Emitter::instr_e2     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* F0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     }
     };
     
@@ -67,11 +67,13 @@ public:
     bool jit_process_extended_opcode(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
 
 
-    bool instr_0E(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
+    bool instr_0e(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
     bool instr_20(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
     bool instr_21(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
     bool instr_31(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
     bool instr_32(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
+    bool instr_3e(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
     bool instr_af(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
+    bool instr_e2(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
     bool instr_cb7c(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom);
 };

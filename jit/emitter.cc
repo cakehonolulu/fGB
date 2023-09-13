@@ -165,7 +165,7 @@ void Emitter :: jit_emit_epilogue(JitBlock *block, Cpu *cpu, std::vector<char> *
 	block->ret();
 }
 
-bool Emitter :: instr_0E(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+bool Emitter :: instr_0e(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
 	std::int8_t d8 = (bootrom->at(cpu->get_pc() + 1));
 
 	std::cout << BOLDBLUE << "[JIT] C, $" << format("{:02X}", d8) << RESET << "\n";
@@ -236,6 +236,17 @@ bool Emitter :: instr_32(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) 
 	return false;
 }
 
+bool Emitter :: instr_3e(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+	std::cout << BOLDBLUE << "[JIT] LD A, $" << format("{:02X}",
+		(std::uint8_t) ((0xFF & bootrom->at(cpu->get_pc() + 1)))) << RESET << std::endl;
+	
+	block->mov(ah, (std::uint8_t) ((0xFF & bootrom->at(cpu->get_pc() + 1))));
+
+	cpu->set_pc(cpu->get_pc() + 2);
+	block->add(dx, 2);
+	return false;
+}
+
 bool Emitter :: instr_af(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
 	std::cout << BOLDBLUE << "[JIT] XOR A, A" << RESET << std::endl;
 	
@@ -254,6 +265,16 @@ bool Emitter :: instr_af(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) 
 	
 	cpu->set_pc(cpu->get_pc() + 1);
 	block->inc(dx);
+	return false;
+}
+
+bool Emitter :: instr_e2(JitBlock *block, Cpu *cpu, std::vector<char> *bootrom) {
+	std::cout << BOLDBLUE << "[JIT] LD (C), A" << RESET << std::endl;
+	
+
+	cpu->set_pc(cpu->get_pc() + 1);
+	block->inc(dx);
+	
 	return false;
 }
 
