@@ -8,8 +8,8 @@ private:
 	union
 	{
 		struct {
-			std::uint8_t a;
 			std::uint8_t f;
+			std::uint8_t a;
 		};
 		std::uint16_t af;
 	};
@@ -17,8 +17,8 @@ private:
 	union
 	{
 		struct {
-			std::uint8_t b;
 			std::uint8_t c;
+			std::uint8_t b;
 		};
 		std::uint16_t bc;
 	};
@@ -26,8 +26,8 @@ private:
 	union
 	{
 		struct {
-			std::uint8_t h;
 			std::uint8_t l;
+			std::uint8_t h;
 		};
 		std::uint16_t hl;
 	};
@@ -35,18 +35,14 @@ private:
 	std::uint16_t pc;
 	std::uint16_t sp;
 
-	std::uint8_t flags;
-
 public:
 
 	Cpu();
 
 	std::uint16_t get_af();
 	std::uint8_t get_a();
-	std::uint8_t get_f();
 	void set_af(std::uint16_t af_);
 	void set_a(std::uint8_t a_);
-	void set_f(std::uint8_t f_);
 
 	std::uint16_t get_bc();
 	std::uint8_t get_b();
@@ -68,8 +64,8 @@ public:
 	std::uint16_t get_sp();
 	void set_sp(std::uint16_t sp_);
 
-	std::uint8_t get_flags();
-	void set_flags(std::uint8_t flags_);
+	std::uint8_t get_f();
+	void set_f(std::uint8_t flags_);
 
 	void print_regs();
 };

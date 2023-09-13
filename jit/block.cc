@@ -72,7 +72,7 @@ void JitBlock :: disassemble() {
 	size_t count;
 
 	std::cout << "\n-------- BLOCK  INFORMATION --------\n";
-	std::cout << "     Block ID: " << get_id() << ", PC: " << format("{:#06x}", get_pc()) << "\n";
+	std::cout << "     Block ID: " << get_id() << ", PC: 0x" << format("{:04X}", get_pc()) << "\n";
 	std::cout << "------------------------------------\n";
 
 	if (cs_open(CS_ARCH_X86, CS_MODE_64, &handle) != CS_ERR_OK) {

@@ -1,5 +1,7 @@
 #include <cpu.hh>
+#include <fgb.hh>
 #include <iostream>
+#include <bitset>
 
 #if __has_include(<format>)
     #include <format>
@@ -111,18 +113,48 @@ void Cpu :: set_sp(std::uint16_t sp_) {
     sp = sp_;
 }
 
-
-std::uint8_t Cpu :: get_flags() {
-    return flags;
-}
-
-void Cpu :: set_flags(std::uint8_t flags_) {
-    flags = flags_;
-}
-
 void Cpu :: print_regs() {
-    std::cout << "A:  " << format("{:#04x}", get_a()) << ", F: " << format("{:#04x}", get_f()) << ", AF: " << format("{:#06x}", get_af()) << "\n";
-    std::cout << "B:  " << format("{:#04x}", get_b()) << ", C: " << format("{:#04x}", get_c()) << ", BC: " << format("{:#06x}", get_bc()) << "\n";
-    std::cout << "H:  " << format("{:#04x}", get_h()) << ", L: " << format("{:#04x}", get_l()) << ", HL: " << format("{:#06x}", get_hl()) << "\n";
-    std::cout << "PC: " << format("{:#06x}", get_pc()) << "         SP: " << format("{:#06x}", get_sp()) << "\n";
+    std::bitset<4> flags(((std::bitset<8>) (get_f() & 0xF0)).to_string().substr(0, 4));
+
+    std::cout << "A:  0x" << format("{:02X}", get_a()) << ", F: 0x" << format("{:02X}", get_f()) << ", AF: 0x" << format("{:04X}", get_af()) << "\n";
+    std::cout << "B:  0x" << format("{:02X}", get_b()) << ", C: 0x" << format("{:02X}", get_c()) << ", BC: 0x" << format("{:04X}", get_bc()) << "\n";
+    std::cout << "H:  0x" << format("{:02X}", get_h()) << ", L: 0x" << format("{:02X}", get_l()) << ", HL: 0x" << format("{:04X}", get_hl()) << "\n";
+    std::cout << "PC: 0x" << format("{:04X}", get_pc()) << "         SP: 0x" << format("{:04X}", get_sp()) << "\n";
+    std::cout << "Flags: 0x" << format("{:02X}", (get_f())) << " (0b" << flags.to_string() << "), ";
+
+    if (flags.to_string().at(0) == '1')
+    {
+        std::cout << BOLDGREEN << "Z ";
+    }
+    else
+    {
+        std::cout << BOLDRED << "Z ";
+    }
+    
+    if (flags.to_string().at(1) == '1')
+    {
+        std::cout << BOLDGREEN << "N ";
+    }
+    else
+    {
+        std::cout << BOLDRED << "N ";
+    }
+    
+    if (flags.to_string().at(2) == '1')
+    {
+        std::cout << BOLDGREEN << "H ";
+    }
+    else
+    {
+        std::cout << BOLDRED << "H ";
+    }
+    
+    if (flags.to_string().at(3) == '1')
+    {
+        std::cout << BOLDGREEN << "C " << RESET << std::endl;
+    }
+    else
+    {
+        std::cout << BOLDRED << "C " << RESET << std::endl;
+    }
 }

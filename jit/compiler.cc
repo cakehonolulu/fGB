@@ -2,6 +2,7 @@
 #include <jit/emitter.hh>
 #include <fgb.hh>
 #include <vector>
+#include <bitset>
 
 #if __has_include(<format>)
     #include <format>
@@ -23,32 +24,45 @@ Compiler :: ~Compiler() {
 
 void Compiler :: run(Cpu *cpu, Emitter *emitter, std::vector<char> *bootrom) {
     
+    JitBlock *block = NULL;
+
     while (1) {
-        if (jit_find_compiled_block(cpu->get_pc()) != NULL)
+        if ((block = jit_find_compiled_block(cpu->get_pc())) != NULL)
         {
+            //std::cout << "[" << BOLDBLUE << "*" << RESET << "] Executing the cached block...\n";
+
             // Execute that block
-            cpu->print_regs();
-            exit(1);
+            block->execute();
+
+            block = NULL;
+
+            //std::cout << "[" << BOLDGREEN << "✓" << RESET << "] Cached block executed successfully...! Continuing...\n";
         }
         else
         {
-            std::cout << "[" << BOLDYELLOW << "!" << RESET << "] No compiled block found! Compiling a new one...\n";
+            //std::cout << "[" << BOLDYELLOW << "!" << RESET << "] No compiled block found! Compiling a new one...\n";
 
             JitBlock *new_block = jit_find_available_block();
 
             if (new_block != NULL)
             {
+                std::uint16_t pc = cpu->get_pc();
+
                 emitter->jit_compile_block(new_block, cpu, bootrom);
 
-                std::cout << "[" << BOLDBLUE << "*" << RESET << "] Executing the block...\n";
+                cpu->set_pc(pc);
+
+                //std::cout << "[" << BOLDBLUE << "*" << RESET << "] Executing the block...\n";
 
                 new_block->execute();
 
-                std::cout << "[" << BOLDGREEN << "✓" << RESET << "] Executed successfully...! Continuing...\n";
+                //sleep(1);
+
+                //std::cout << "[" << BOLDGREEN << "✓" << RESET << "] Executed successfully...! Continuing...\n";
             }
             else
             {
-                std::cout << "[" << BOLDRED << "X" << RESET << "] Ran out of available blocks! Exiting...\n";
+                //std::cout << "[" << BOLDRED << "X" << RESET << "] Ran out of available blocks! Exiting...\n";
             }
         }
     }
@@ -60,7 +74,7 @@ JitBlock * Compiler :: jit_find_compiled_block(std::uint16_t pc) {
     int i = 0;
     bool found = false;
 
-    std::cout << "[" << BOLDBLUE << "*" << RESET << "] Searching for a compiled block where PC = " << format("{:#06x}\n", pc);
+    //std::cout << "[" << BOLDBLUE << "*" << RESET << "] Searching for a compiled block where PC = " << format("{:#06x}\n", pc);
 
     while (i < BLOCK_COUNT && !found)
     {
@@ -69,7 +83,7 @@ JitBlock * Compiler :: jit_find_compiled_block(std::uint16_t pc) {
             block = &blocks[i];
             found = true;
 
-            std::cout << "[" << BOLDGREEN << "✓" << RESET << "] Found a compiled block!\n";
+            //std::cout << "[" << BOLDGREEN << "✓" << RESET << "] Found a compiled block!\n";
         }
 
         i++;
@@ -84,7 +98,7 @@ JitBlock * Compiler :: jit_find_available_block() {
     int i = 0;
     bool found = false;
 
-    std::cout << "[" << BOLDBLUE << "*" << RESET << "] Searching for an available block...\n";
+    //std::cout << "[" << BOLDBLUE << "*" << RESET << "] Searching for an available block...\n";
 
     while (i < BLOCK_COUNT && !found)
     {
@@ -93,7 +107,7 @@ JitBlock * Compiler :: jit_find_available_block() {
             block = &blocks[i];
             found = true;
 
-            std::cout << "[" << BOLDGREEN << "✓" << RESET << "] Found a free block!\n";
+            //std::cout << "[" << BOLDGREEN << "✓" << RESET << "] Found a free block!\n";
         }
 
         i++;
