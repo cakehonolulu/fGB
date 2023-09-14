@@ -149,4 +149,29 @@ public:
 
 	void write_word(std::uint16_t word, std::uint16_t offset);
 	std::uint16_t read_word(std::uint16_t offset);
+
+	static std::uint8_t read_byte_wrapper(Mmu *mmu, std::uint16_t offset) {
+		printf("read_byte_wrapper: Read from 0x%04X\n", offset);
+		std::uint8_t byte = mmu->read_byte(offset);
+		printf("read_byte_wrapper: Value read is 0x%02X\n", byte);
+		return byte;
+	}
+
+	static void write_byte_wrapper(Mmu *mmu, std::uint8_t byte, std::uint16_t offset) {
+		printf("write_byte_wrapper: Write 0x%02X to 0x%04X\n", byte, offset);
+		mmu->write_byte(byte, offset);
+		//printf("write_byte_wrapper: Returned successfully...!\n");
+	}
+
+	static std::uint8_t read_word_wrapper(Mmu *mmu, std::uint16_t offset) {
+		//printf("write_byte_wrapper: Write 0x%02X to 0x%04X\n", byte, offset);
+		return mmu->read_word(offset);
+		//printf("write_byte_wrapper: Returned successfully...!\n");
+	}
+
+	static void write_word_wrapper(Mmu *mmu, std::uint16_t word, std::uint16_t offset) {
+		//printf("write_word_wrapper: Write 0x%04X to 0x%04X\n", word, offset);
+		mmu->write_word(word, offset);
+		//printf("write_byte_wrapper: Returned successfully...!\n");
+	}
 };

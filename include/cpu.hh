@@ -26,6 +26,15 @@ private:
 	union
 	{
 		struct {
+			std::uint8_t e;
+			std::uint8_t d;
+		};
+		std::uint16_t de;
+	};
+
+	union
+	{
+		struct {
 			std::uint8_t l;
 			std::uint8_t h;
 		};
@@ -36,7 +45,6 @@ private:
 	std::uint16_t sp;
 
 public:
-
 	Cpu();
 
 	std::uint16_t get_af();
@@ -50,6 +58,13 @@ public:
 	void set_bc(std::uint16_t bc_);
 	void set_b(std::uint8_t b_);
 	void set_c(std::uint8_t c_);
+
+	std::uint16_t get_de();
+	std::uint8_t get_d();
+	std::uint8_t get_e();
+	void set_de(std::uint16_t de_);
+	void set_d(std::uint8_t d_);
+	void set_e(std::uint8_t e_);
 
 	std::uint16_t get_hl();
 	std::uint8_t get_h();

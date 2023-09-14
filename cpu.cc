@@ -70,6 +70,29 @@ void Cpu :: set_c(std::uint8_t c_) {
     c = c_;
 }
 
+std::uint16_t Cpu :: get_de() {
+    return de;
+}
+
+std::uint8_t Cpu :: get_d() {
+    return d;
+}
+
+std::uint8_t Cpu :: get_e() {
+    return e;
+}
+
+void Cpu :: set_de(std::uint16_t de_) {
+    de = de_;
+}
+
+void Cpu :: set_d(std::uint8_t d_) {
+    d = d_;
+}
+
+void Cpu :: set_e(std::uint8_t e_) {
+    e = e_;
+}
 
 std::uint16_t Cpu :: get_hl() {
     return hl;
@@ -95,7 +118,6 @@ void Cpu :: set_l(std::uint8_t l_) {
     l = l_;
 }
 
-
 std::uint16_t Cpu :: get_pc() {
     return pc;
 }
@@ -119,6 +141,7 @@ void Cpu :: print_regs() {
     std::cout << "A:  0x" << format("{:02X}", get_a()) << ", F: 0x" << format("{:02X}", get_f()) << ", AF: 0x" << format("{:04X}", get_af()) << "\n";
     std::cout << "B:  0x" << format("{:02X}", get_b()) << ", C: 0x" << format("{:02X}", get_c()) << ", BC: 0x" << format("{:04X}", get_bc()) << "\n";
     std::cout << "H:  0x" << format("{:02X}", get_h()) << ", L: 0x" << format("{:02X}", get_l()) << ", HL: 0x" << format("{:04X}", get_hl()) << "\n";
+    std::cout << "D:  0x" << format("{:02X}", get_d()) << ", E: 0x" << format("{:02X}", get_e()) << ", DE: 0x" << format("{:04X}", get_de()) << "\n";
     std::cout << "PC: 0x" << format("{:04X}", get_pc()) << "         SP: 0x" << format("{:04X}", get_sp()) << "\n";
     std::cout << "Flags: 0x" << format("{:02X}", (get_f())) << " (0b" << flags.to_string() << "), ";
 

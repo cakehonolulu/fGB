@@ -146,7 +146,7 @@ void Mmu ::write_byte(std::uint8_t byte, std::uint16_t offset)
     else if (offset == 0xFFFF)
     {
         std::cout << "Tried to write to Interrupt Enable" << std::endl;
-        exit(1);
+        //exit(1);
     }
 
     return;
@@ -251,7 +251,7 @@ std::uint8_t Mmu ::read_byte(uint16_t offset)
     return 0;
 }
 
-void Mmu ::write_word(std::uint16_t word, std::uint16_t offset)
+void Mmu :: write_word(std::uint16_t word, std::uint16_t offset)
 {
     write_byte(offset, word >> 8);
     write_byte(offset + 1, word & 0xFF);

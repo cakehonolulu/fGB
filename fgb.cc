@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstddef>
 #include <fstream>
 
 int main(int argc, char *argv[])
@@ -66,7 +67,7 @@ int main(int argc, char *argv[])
 	if (enable_jit)
 	{
 		Compiler *jit_compiler = new Compiler();
-		Emitter emitter = Emitter();
+		Emitter emitter = Emitter(&mmu);
 
 		//exit(1);
 

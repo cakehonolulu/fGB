@@ -56,7 +56,10 @@ void Compiler :: run(Cpu *cpu, Emitter *emitter, Mmu *mmu) {
                 //std::cout << "[" << BOLDBLUE << "*" << RESET << "] Executing the block...\n";
 
                 new_block->execute();
+                
 
+                cpu->print_regs();
+                
                 //sleep(1);
 
                 //std::cout << "[" << BOLDGREEN << "✓" << RESET << "] Executed successfully...! Continuing...\n";

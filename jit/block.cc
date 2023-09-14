@@ -1,6 +1,7 @@
 #include <jit/block.hh>
 #include <capstone/capstone.h>
 #include <fgb.hh>
+#include <iostream>
 
 #if __has_include(<format>)
     #include <format>
