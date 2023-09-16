@@ -6,6 +6,25 @@
 #include <cstdint>
 #include <vector>
 
+#define A ah
+#define F al
+#define AF ax
+
+#define B bh
+#define C bl
+#define BC bx
+
+#define D dh
+#define E dl
+#define DE dx
+
+#define H ch
+#define L_ cl
+#define HL cx
+
+#define PC r9w
+#define SP r8w
+
 class Emitter {
 
     typedef bool (Emitter::*Instruction_)(JitBlock *, Cpu *, Mmu *);
@@ -18,11 +37,11 @@ public:
 
     const Instruction instructions[256] = {
         /*          +0	      +1	       +2	        +3	      +4	    +5	      +6	    +7	      +8	    +9	      +A	    +B	         +C	       +D	     +E	       +F      */
-        /* 00+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { &Emitter::instr_0c }, { NULL }, { &Emitter::instr_0e }, { NULL     },
+        /* 00+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_06 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { &Emitter::instr_0c }, { NULL }, { &Emitter::instr_0e }, { NULL     },
         /* 10+ */ { NULL }, { &Emitter::instr_11     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_1a }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 20+ */ { &Emitter::instr_20 }, { &Emitter::instr_21 }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 30+ */ { NULL }, { &Emitter::instr_31 }, { &Emitter::instr_32 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { &Emitter::instr_3e }, { NULL     },
-        /* 40+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
+        /* 40+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_4f     },
         /* 50+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 60+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 70+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_77 }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
@@ -30,7 +49,7 @@ public:
         /* 90+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* A0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_af },
         /* B0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* C0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { &Emitter::jit_process_extended_opcode    }, { NULL }, { &Emitter::instr_cd }, { NULL }, { NULL     },
+        /* C0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { &Emitter::instr_c5 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { &Emitter::jit_process_extended_opcode    }, { NULL }, { &Emitter::instr_cd }, { NULL }, { NULL     },
         /* D0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* E0+ */ { &Emitter::instr_e0 }, { NULL     }, { &Emitter::instr_e2     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* F0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     }
@@ -74,6 +93,7 @@ public:
     void jit_save_frame(JitBlock *block, Cpu *cpu, Mmu *mmu);
 
 
+    bool instr_06(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_0c(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_0e(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_11(JitBlock *block, Cpu *cpu, Mmu *mmu);
@@ -83,10 +103,12 @@ public:
     bool instr_31(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_32(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_3e(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_4f(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_77(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_af(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_e0(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_e2(JitBlock *block, Cpu *cpu, Mmu *mmu);
+    bool instr_c5(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_cb7c(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_cd(JitBlock *block, Cpu *cpu, Mmu *mmu);
 };

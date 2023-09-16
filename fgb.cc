@@ -11,7 +11,8 @@
 
 int main(int argc, char *argv[])
 {
-	bool enable_jit = false;
+	bool enable_jit = false, provided_bootrom = false, provided_rom = false;
+	std::string bootrom_path, rom_path;
 
 	if (argc < 2)
 	{
@@ -22,6 +23,8 @@ int main(int argc, char *argv[])
 	else
 	{
 		std::string jit_arg = "-jit";
+		std::string bootrom_arg = "-bootrom";
+		std::string rom_arg = "-rom";
 
 		for (int i = 0; i < argc; i++)
 		{
@@ -30,18 +33,48 @@ int main(int argc, char *argv[])
 				std::cout << BOLDBLUE << "Enabling JIT mode...!" << RESET << "\n";
 				enable_jit = true;
 			}
+			else
+			if (bootrom_arg.compare(argv[i]) == 0)
+			{
+				if (argv[i + 1] != NULL)
+				{
+					provided_bootrom = true;
+					bootrom_path = argv[i + 1];
+					i++;
+				}
+				else
+				{
+					std::cout << BOLDRED << "No bootrom file provided...!" << RESET << "\n";
+				}
+			}
+			else
+			if (rom_arg.compare(argv[i]) == 0)
+			{
+				if (argv[i + 1] != NULL)
+				{
+					provided_rom = true;
+					rom_path = argv[i + 1];
+					i++;
+				}
+				else
+				{
+					std::cout << BOLDRED << "No ROM file provided...!" << RESET << "\n";
+				}
+			}
 		}
 	}
 
-	
-	// Specify the file path
-    const std::string filePath = "bootrom.bin";
+	if (!provided_bootrom)
+	{
+		std::cout << BOLDRED << "No bootrom provided...! Exiting..." << RESET << "\n";
+		exit(1);
+	}
 
     // Open the file in binary mode
-    std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+    std::ifstream file(bootrom_path, std::ios::binary | std::ios::ate);
 
     if (!file.is_open()) {
-        std::cerr << "Failed to open file: " << filePath << std::endl;
+        std::cerr << "Failed to open file: " << bootrom_path << std::endl;
         return 1;
     }
 
@@ -54,7 +87,7 @@ int main(int argc, char *argv[])
 
     // Read the file into the vector
     if (!file.read(fileData.data(), fileSize)) {
-        std::cerr << "Failed to read file: " << filePath << std::endl;
+        std::cerr << "Failed to read file: " << bootrom_path << std::endl;
         return 1;
     }
 
@@ -63,6 +96,35 @@ int main(int argc, char *argv[])
 
 	Cpu cpu = Cpu();
 	Mmu mmu = Mmu(&fileData);
+
+	if (provided_rom)
+	{
+		// Open the file in binary mode
+		std::ifstream rom_file(rom_path, std::ios::binary | std::ios::ate);
+
+		if (!rom_file.is_open()) {
+			std::cerr << "Failed to open file: " << rom_path << std::endl;
+			return 1;
+		}
+
+		// Get the file size
+		std::streampos rom_size = rom_file.tellg();
+		rom_file.seekg(0, std::ios::beg);
+
+		// Create a vector to store the file contents
+		std::vector<char> rom_data(rom_size);
+
+		// Read the file into the vector
+		if (!rom_file.read(rom_data.data(), rom_size)) {
+			std::cerr << "Failed to read file: " << rom_path << std::endl;
+			return 1;
+		}
+
+		// Close the file
+		rom_file.close();
+
+		mmu.load_game(&rom_data, rom_size);
+	}
 
 	if (enable_jit)
 	{

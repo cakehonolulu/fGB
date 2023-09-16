@@ -199,6 +199,20 @@ void Emitter :: jit_save_frame(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	block->mov(ptr [rdi + 10], r8w);
 }
 
+bool Emitter :: instr_06(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+	std::uint8_t u8 = (mmu->read_byte(cpu->get_pc() + 1));
+
+	std::cout << BOLDBLUE << "[JIT] LD B, $" << format("{:02X}", u8) << RESET << "\n";
+
+	block->mov(B, u8);
+
+	block->add(PC, 2);
+
+	cpu->set_pc(cpu->get_pc() + 2);
+
+	return false;
+}
+
 bool Emitter :: instr_0c(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 
 	std::cout << BOLDBLUE << "[JIT] INC C" << RESET << "\n";
@@ -284,8 +298,10 @@ bool Emitter :: instr_1a(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 
 	block->call(rax);
 
+	block->movzx(bx, al);
 	block->mov(rdi, (size_t)cpu);
 	block->mov(al, ptr [rdi]);
+	block->mov(ah, bl);
 	block->mov(bx, ptr [rdi + 2]);
 	block->mov(dx, ptr [rdi + 4]);
 	block->mov(cx, ptr [rdi + 6]);
@@ -382,6 +398,16 @@ bool Emitter :: instr_3e(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 
 	cpu->set_pc(cpu->get_pc() + 2);
 	block->add(r9w, 2);
+	return false;
+}
+
+bool Emitter :: instr_4f(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+	std::cout << BOLDBLUE << "[JIT] LD C, A" << RESET << std::endl;
+	
+	block->mov(C, A);
+
+	cpu->set_pc(cpu->get_pc() + 1);
+	block->inc(PC);
 	return false;
 }
 
@@ -498,6 +524,57 @@ void debug(JitBlock *block)
     block->mov(rdi, 0);
 
     block->syscall();
+}
+
+bool Emitter :: instr_c5(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+	std::cout << BOLDBLUE << "[JIT] PUSH BC" << RESET << std::endl;
+
+	jit_save_frame(block, cpu, mmu);
+
+	// Call the function using System-V x86_64 ABI
+	// First argument to write_byte_wrapper
+	block->mov(rdi, reinterpret_cast<uintptr_t>(mmu));
+
+	// Second argument to write_byte_wrapper
+	block->movzx(esi, BC);
+
+	// Third argument to write_byte_wrapper
+	block->movzx(rdx, SP);
+
+	block->mov(rax, reinterpret_cast<uintptr_t>(&Mmu::write_byte_wrapper));
+
+	block->call(rax);
+
+	jit_restore_frame(block, cpu, mmu);
+
+	jit_save_frame(block, cpu, mmu);
+
+	// Call the function using System-V x86_64 ABI
+	// First argument to write_byte_wrapper
+	block->mov(rdi, reinterpret_cast<uintptr_t>(mmu));
+
+	block->shr(BC, 8);
+
+	// Second argument to write_byte_wrapper
+	block->movzx(esi, BC);
+
+	block->dec(SP);
+
+	// Third argument to write_byte_wrapper
+	block->movzx(rdx, SP);
+
+	block->mov(rax, reinterpret_cast<uintptr_t>(&Mmu::write_byte_wrapper));
+
+	block->call(rax);
+
+	jit_restore_frame(block, cpu, mmu);
+
+	block->sub(SP, 2);
+
+	cpu->set_pc(cpu->get_pc() + 2);
+	block->add(PC, 2);
+	
+	return true;
 }
 
 bool Emitter :: instr_cb7c(JitBlock *block, Cpu *cpu, Mmu *mmu) {

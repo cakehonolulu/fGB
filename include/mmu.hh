@@ -144,6 +144,8 @@ public:
     
     ~Mmu();
 
+	void load_game(std::vector<char> *game, std::uint32_t size);
+
 	void write_byte(std::uint8_t byte, std::uint16_t offset);
 	std::uint8_t read_byte(uint16_t offset);
 
@@ -160,7 +162,7 @@ public:
 	static void write_byte_wrapper(Mmu *mmu, std::uint8_t byte, std::uint16_t offset) {
 		printf("write_byte_wrapper: Write 0x%02X to 0x%04X\n", byte, offset);
 		mmu->write_byte(byte, offset);
-		//printf("write_byte_wrapper: Returned successfully...!\n");
+		printf("write_byte_wrapper: Returned successfully...!\n");
 	}
 
 	static std::uint8_t read_word_wrapper(Mmu *mmu, std::uint16_t offset) {

@@ -26,7 +26,12 @@ Mmu :: ~Mmu()
     delete mmu;
 }
 
-void Mmu ::write_byte(std::uint8_t byte, std::uint16_t offset)
+void Mmu :: load_game(std::vector<char> *game, std::uint32_t size)
+{
+    memcpy(mmu->gb_mmap.cart, game->data(), size);
+}
+
+void Mmu :: write_byte(std::uint8_t byte, std::uint16_t offset)
 {
     // While on BootROM, 0x00 -> 0xFF are R/O
     if (mmu->in_bootrom && offset >= 0x00 && offset <= 0xFF)
@@ -162,6 +167,7 @@ std::uint8_t Mmu ::read_byte(uint16_t offset)
     // #0 Cart (Fixed) [0x0 - 0x3FFF]
     if (offset >= 0x0000 && 0x3FFF >= offset)
     {
+        printf("Read from Cart!\n");
         return mmu->gb_mmap.cart[offset];
     }
     else if (offset >= 0x4000 && 0x7FFF >= offset)          // #1 Cart (Switchable) [0x4000 - 0x7FFF]

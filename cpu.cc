@@ -140,8 +140,8 @@ void Cpu :: print_regs() {
 
     std::cout << "A:  0x" << format("{:02X}", get_a()) << ", F: 0x" << format("{:02X}", get_f()) << ", AF: 0x" << format("{:04X}", get_af()) << "\n";
     std::cout << "B:  0x" << format("{:02X}", get_b()) << ", C: 0x" << format("{:02X}", get_c()) << ", BC: 0x" << format("{:04X}", get_bc()) << "\n";
-    std::cout << "H:  0x" << format("{:02X}", get_h()) << ", L: 0x" << format("{:02X}", get_l()) << ", HL: 0x" << format("{:04X}", get_hl()) << "\n";
     std::cout << "D:  0x" << format("{:02X}", get_d()) << ", E: 0x" << format("{:02X}", get_e()) << ", DE: 0x" << format("{:04X}", get_de()) << "\n";
+    std::cout << "H:  0x" << format("{:02X}", get_h()) << ", L: 0x" << format("{:02X}", get_l()) << ", HL: 0x" << format("{:04X}", get_hl()) << "\n";
     std::cout << "PC: 0x" << format("{:04X}", get_pc()) << "         SP: 0x" << format("{:04X}", get_sp()) << "\n";
     std::cout << "Flags: 0x" << format("{:02X}", (get_f())) << " (0b" << flags.to_string() << "), ";
 
