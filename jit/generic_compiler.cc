@@ -1,5 +1,5 @@
-#include <jit/compiler.hh>
-#include <jit/emitter.hh>
+#include <jit/generic_compiler.hh>
+#include <jit/generic_emitter.hh>
 #include <mmu/mmu.hh>
 #include <fgb.hh>
 #include <vector>
@@ -23,7 +23,9 @@ Compiler :: ~Compiler() {
 	delete blocks;
 }
 
-void Compiler :: run(Cpu *cpu, Emitter *emitter, Mmu *mmu) {
+#ifdef JIT_AMD64
+void Compiler :: run(Cpu *cpu, Amd64_Emitter *emitter, Mmu *mmu) {
+#endif
     
     JitBlock *block = NULL;
 

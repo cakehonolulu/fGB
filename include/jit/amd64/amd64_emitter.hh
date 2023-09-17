@@ -1,8 +1,11 @@
 #pragma once
 
-#include <jit/block.hh>
+#include <jit/amd64/amd64_block.hh>
+#include <jit/amd64/amd64_emitter.hh>
+#include <jit/generic_emitter.hh>
 #include <mmu/mmu.hh>
 #include <cpu/cpu.hh>
+#include <fgb.hh>
 #include <cstdint>
 #include <vector>
 
@@ -27,16 +30,10 @@
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 /* Suitable for calling under MS ABI */
-#if _WIN32 || _WIN64
-    #if _WIN64
 // 64-bit
 #define arg1q    rcx
 #define arg2q    rdx
 #define arg3q    r8
-    #else
-        #define NO_64BIT
-    #endif
-#endif
 
 // 32-bit
 #define arg1d    ecx
@@ -52,16 +49,10 @@
 #define arg3b    r8b
 #else
 /* Suitable for calling under SysV ABI */
-#if __GNUC__
-    #if __x86_64__ || __ppc64__
 // 64-bit
 #define arg1q    rdi
 #define arg2q    rsi
 #define arg3q    rdx
-    #else
-        #define NO_64BIT
-    #endif
-#endif
 
 // 32-bit
 #define arg1d    edi
@@ -77,9 +68,9 @@
 #define arg3b    dl
 #endif
 
-class Emitter {
+class Amd64_Emitter : public Emitter {
 
-    typedef bool (Emitter::*Instruction_)(JitBlock *, Cpu *, Mmu *);
+    typedef bool (Amd64_Emitter::*Instruction_)(JitBlock *, Cpu *, Mmu *);
 
     struct Instruction {
         Instruction_ func;
@@ -89,21 +80,21 @@ public:
 
     const Instruction instructions[256] = {
         /*          +0	      +1	       +2	        +3	      +4	    +5	      +6	    +7	      +8	    +9	      +A	    +B	         +C	       +D	     +E	       +F      */
-        /* 00+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_06 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { &Emitter::instr_0c }, { NULL }, { &Emitter::instr_0e }, { NULL     },
-        /* 10+ */ { NULL }, { &Emitter::instr_11     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_1a }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* 20+ */ { &Emitter::instr_20 }, { &Emitter::instr_21 }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* 30+ */ { NULL }, { &Emitter::instr_31 }, { &Emitter::instr_32 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { &Emitter::instr_3e }, { NULL     },
-        /* 40+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_4f     },
+        /* 00+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { &Amd64_Emitter::instr_06 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { &Amd64_Emitter::instr_0c }, { NULL }, { &Amd64_Emitter::instr_0e }, { NULL     },
+        /* 10+ */ { NULL }, { &Amd64_Emitter::instr_11     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { &Amd64_Emitter::instr_1a }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
+        /* 20+ */ { &Amd64_Emitter::instr_20 }, { &Amd64_Emitter::instr_21 }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
+        /* 30+ */ { NULL }, { &Amd64_Emitter::instr_31 }, { &Amd64_Emitter::instr_32 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { &Amd64_Emitter::instr_3e }, { NULL     },
+        /* 40+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { &Amd64_Emitter::instr_4f     },
         /* 50+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 60+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* 70+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_77 }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
+        /* 70+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { &Amd64_Emitter::instr_77 }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 80+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 90+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* A0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { &Emitter::instr_af },
+        /* A0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { &Amd64_Emitter::instr_af },
         /* B0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* C0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { &Emitter::instr_c5 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { &Emitter::jit_process_extended_opcode    }, { NULL }, { &Emitter::instr_cd }, { NULL }, { NULL     },
+        /* C0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { &Amd64_Emitter::instr_c5 }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { &Amd64_Emitter::jit_process_extended_opcode    }, { NULL }, { &Amd64_Emitter::instr_cd }, { NULL }, { NULL     },
         /* D0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* E0+ */ { &Emitter::instr_e0 }, { NULL     }, { &Emitter::instr_e2     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
+        /* E0+ */ { &Amd64_Emitter::instr_e0 }, { NULL     }, { &Amd64_Emitter::instr_e2     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* F0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     }
     };
     
@@ -116,7 +107,7 @@ public:
         /* 40+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 50+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 60+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
-        /* 70+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { &Emitter::instr_cb7c }, { NULL }, { NULL }, { NULL     },
+        /* 70+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { &Amd64_Emitter::instr_cb7c }, { NULL }, { NULL }, { NULL     },
         /* 80+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* 90+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* A0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
@@ -126,10 +117,6 @@ public:
         /* E0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     },
         /* F0+ */ { NULL }, { NULL     }, { NULL     }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL }, { NULL    }, { NULL }, { NULL }, { NULL }, { NULL     }
     };
-    
-    Mmu *mmu;
-
-    Emitter(Mmu* mmu_);
 
     void jit_compile_block(JitBlock *block, Cpu *cpu, Mmu *mmu);
 

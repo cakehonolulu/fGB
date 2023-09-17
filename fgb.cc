@@ -1,5 +1,5 @@
-#include <jit/block.hh>
-#include <jit/compiler.hh>
+#include <jit/generic_block.hh>
+#include <jit/generic_compiler.hh>
 #include <fgb.hh>
 #include <cpu/cpu.hh>
 #include <mmu/mmu.hh>
@@ -8,6 +8,11 @@
 #include <vector>
 #include <cstddef>
 #include <fstream>
+
+#ifdef JIT_AMD64
+#include <jit/amd64/amd64_block.hh>
+#include <jit/amd64/amd64_emitter.hh>
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -128,12 +133,17 @@ int main(int argc, char *argv[])
 
 	if (enable_jit)
 	{
-		Compiler *jit_compiler = new Compiler();
-		Emitter emitter = Emitter(&mmu);
 
-		//exit(1);
+		Compiler *jit_compiler = new Compiler();
+
+#ifdef JIT_AMD64
+		Amd64_Emitter emitter = Amd64_Emitter(&mmu);
+#endif
 
 		jit_compiler->run(&cpu, &emitter, &mmu);
+		
+		//exit(1);
+
 
 		/*block.mov(Xbyak::util::rax, 42);
 	    block.ret();

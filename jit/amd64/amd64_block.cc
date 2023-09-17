@@ -1,7 +1,4 @@
-#include <jit/block.hh>
-#include <capstone/capstone.h>
-#include <fgb.hh>
-#include <iostream>
+#include <jit/amd64/amd64_block.hh>
 
 #if __has_include(<format>)
     #include <format>
@@ -10,45 +7,6 @@
     #include <fmt/format.h>
     using fmt::format;
 #endif
-
-JitBlock :: JitBlock()
-{
-	pc = 0xFFFF;
-	id = (uint16_t) rand();
-	dirty = false;
-}
-
-JitBlock :: JitBlock(uint8_t id_, uint16_t pc_)
-	: pc(pc_), id(id_)
-{
-}
-
-JitBlock :: ~JitBlock() {
-}
-
-bool JitBlock :: is_dirty() {
-	return dirty;
-}
-
-void JitBlock :: set_dirty(bool dirty_) {
-	dirty = dirty_;
-}
-
-std::uint16_t JitBlock :: get_pc() {
-	return pc;
-}
-
-void JitBlock :: set_pc(std::uint16_t pc_) {
-	pc = pc_;
-}
-
-std::uint16_t JitBlock :: get_id() {
-	return id;
-}
-
-void JitBlock :: set_id(std::uint16_t id_) {
-	id = id_;
-}
 
 int JitBlock :: execute() {
 	typedef int (*FuncPtr)();

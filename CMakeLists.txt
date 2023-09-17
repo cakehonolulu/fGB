@@ -17,6 +17,10 @@ endif()
 
 add_compile_options(-g -Iinclude -Iexternal/zbyak -Wall -Wextra -std=c++2b)
 
+if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+    add_compile_options(-DJIT_AMD64)
+endif()
+
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/*.c)
 
 file(GLOB_RECURSE SRC_FILES ${PROJECT_SOURCE_DIR}/*.c)

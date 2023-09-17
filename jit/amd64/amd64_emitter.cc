@@ -1,9 +1,4 @@
-#include <jit/emitter.hh>
-#include <jit/block.hh>
-#include <mmu/mmu.hh>
-#include <vector>
-#include <xbyak/xbyak.h>
-#include <fgb.hh>
+#include <jit/amd64/amd64_emitter.hh>
 
 using namespace Xbyak;
 using namespace Xbyak::util;
@@ -16,11 +11,7 @@ using namespace Xbyak::util;
     using fmt::format;
 #endif
 
-Emitter :: Emitter(Mmu *mmu_) {
-	mmu = mmu_;
-}
-
-void Emitter :: jit_compile_block(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+void Amd64_Emitter :: jit_compile_block(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 
     std::cout << "[" << BOLDBLUE << "*" << RESET << "] Emitting instructions...\n";
 
@@ -50,7 +41,7 @@ void Emitter :: jit_compile_block(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 }
 
 
-bool Emitter :: jit_process_opcode(std::uint8_t opcode, JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: jit_process_opcode(std::uint8_t opcode, JitBlock *block, Cpu *cpu, Mmu *mmu) {
     bool branch_found = false;
 
 	Instruction_ func = instructions[opcode].func;
@@ -74,7 +65,7 @@ bool Emitter :: jit_process_opcode(std::uint8_t opcode, JitBlock *block, Cpu *cp
 }
 
 
-bool Emitter :: jit_process_extended_opcode(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: jit_process_extended_opcode(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	bool branch_found = false;
 
 	cpu->set_pc(cpu->get_pc() + 1);
@@ -102,7 +93,7 @@ bool Emitter :: jit_process_extended_opcode(JitBlock *block, Cpu *cpu, Mmu *mmu)
 }
 
 
-void Emitter :: jit_emit_prologue(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+void Amd64_Emitter :: jit_emit_prologue(JitBlock *block, Cpu *cpu, Mmu *mmu) {
     /*
 		Register Allocation (x86_64):
 
@@ -139,7 +130,7 @@ void Emitter :: jit_emit_prologue(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	block->mov(SP, ptr [rdi + 10]);
 }
 
-void Emitter :: jit_emit_epilogue(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+void Amd64_Emitter :: jit_emit_epilogue(JitBlock *block, Cpu *cpu, Mmu *mmu) {
     /*
 		Register Allocation (x86_64):
 
@@ -179,7 +170,7 @@ void Emitter :: jit_emit_epilogue(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	block->ret();
 }
 
-void Emitter :: jit_restore_frame(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+void Amd64_Emitter :: jit_restore_frame(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	block->mov(rdi, (size_t)cpu);
 	block->mov(AF, ptr [rdi]);
 	block->mov(BC, ptr [rdi + 2]);
@@ -189,7 +180,7 @@ void Emitter :: jit_restore_frame(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	block->mov(SP, ptr [rdi + 10]);
 }
 
-void Emitter :: jit_save_frame(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+void Amd64_Emitter :: jit_save_frame(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	block->mov(rdi, (size_t)cpu);
 	block->mov(ptr [rdi], AF);
 	block->mov(ptr [rdi + 2], BC);
@@ -199,7 +190,7 @@ void Emitter :: jit_save_frame(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	block->mov(ptr [rdi + 10], SP);
 }
 
-void Emitter :: handle_movz_arg(JitBlock* block, const Xbyak::Reg8& arg, std::uint8_t pos)
+void Amd64_Emitter :: handle_movz_arg(JitBlock* block, const Xbyak::Reg8& arg, std::uint8_t pos)
 {
 	// BYte to word
 	switch (pos) {
@@ -217,7 +208,7 @@ void Emitter :: handle_movz_arg(JitBlock* block, const Xbyak::Reg8& arg, std::ui
 	}
 }
 
-void Emitter :: handle_movz_arg(JitBlock* block, const Xbyak::Reg16& arg, std::uint8_t pos)
+void Amd64_Emitter :: handle_movz_arg(JitBlock* block, const Xbyak::Reg16& arg, std::uint8_t pos)
 {
 	// Word to dword
 	switch (pos) {
@@ -235,7 +226,7 @@ void Emitter :: handle_movz_arg(JitBlock* block, const Xbyak::Reg16& arg, std::u
 	}
 }
 
-void Emitter :: handle_movz_arg(JitBlock* block, const Xbyak::Reg32& arg, std::uint8_t pos)
+void Amd64_Emitter :: handle_movz_arg(JitBlock* block, const Xbyak::Reg32& arg, std::uint8_t pos)
 {
 	// Dword to qword
 	switch (pos) {
@@ -254,7 +245,7 @@ void Emitter :: handle_movz_arg(JitBlock* block, const Xbyak::Reg32& arg, std::u
 }
 
 template <typename FuncType, typename Arg1Type>
-void Emitter :: call_func_one_arg(JitBlock* block, Mmu* mmu, FuncType func, const Arg1Type& arg1)
+void Amd64_Emitter :: call_func_one_arg(JitBlock* block, Mmu* mmu, FuncType func, const Arg1Type& arg1)
 {
 #if !defined (NO_64BIT)
     block->mov(arg1q, arg1);
@@ -288,7 +279,7 @@ void Emitter :: call_func_one_arg(JitBlock* block, Mmu* mmu, FuncType func, cons
 }
 
 template <typename FuncType, typename Arg1Type, typename Arg2Type>
-void Emitter :: call_func_two_arg(JitBlock* block, Mmu* mmu, FuncType func, const Arg1Type& arg1, const Arg2Type& arg2)
+void Amd64_Emitter :: call_func_two_arg(JitBlock* block, Mmu* mmu, FuncType func, const Arg1Type& arg1, const Arg2Type& arg2)
 {
 #if !defined (NO_64BIT)
     block->mov(arg1q, arg1);
@@ -320,7 +311,7 @@ void Emitter :: call_func_two_arg(JitBlock* block, Mmu* mmu, FuncType func, cons
 }
 
 template <typename FuncType, typename Arg1Type, typename Arg2Type, typename Arg3Type>
-void Emitter :: call_func_three_arg(JitBlock* block, Mmu* mmu, FuncType func, const Arg1Type& arg1, const Arg2Type& arg2, const Arg3Type& arg3)
+void Amd64_Emitter :: call_func_three_arg(JitBlock* block, Mmu* mmu, FuncType func, const Arg1Type& arg1, const Arg2Type& arg2, const Arg3Type& arg3)
 {
 #if !defined (NO_64BIT)
     block->mov(arg1q, arg1);
@@ -353,7 +344,7 @@ void Emitter :: call_func_three_arg(JitBlock* block, Mmu* mmu, FuncType func, co
 #endif
 }
 
-bool Emitter :: instr_06(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_06(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::uint8_t u8 = (mmu->read_byte(cpu->get_pc() + 1));
 
 	std::cout << BOLDBLUE << "[JIT] LD B, $" << format("{:02X}", u8) << RESET << "\n";
@@ -367,7 +358,7 @@ bool Emitter :: instr_06(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_0c(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_0c(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 
 	std::cout << BOLDBLUE << "[JIT] INC C" << RESET << "\n";
 
@@ -411,7 +402,7 @@ bool Emitter :: instr_0c(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_0e(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_0e(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::int8_t d8 = (mmu->read_byte(cpu->get_pc() + 1));
 
 	std::cout << BOLDBLUE << "[JIT] LD C, $" << format("{:02X}", d8) << RESET << "\n";
@@ -425,7 +416,7 @@ bool Emitter :: instr_0e(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_11(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_11(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD DE, $" << format("{:04X}",
 		(std::uint16_t) (((0xFF & mmu->read_byte(cpu->get_pc() + 2)) << 8) | (0xFF & mmu->read_byte(cpu->get_pc() + 1)))) << RESET << std::endl;
 	
@@ -437,7 +428,7 @@ bool Emitter :: instr_11(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_1a(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_1a(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD A, (DE)" << std::endl;
 	
 	jit_save_frame(block, cpu, mmu);
@@ -460,7 +451,7 @@ bool Emitter :: instr_1a(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_20(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_20(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 
 	int displacement = ((std::int8_t) mmu->read_byte(cpu->get_pc() + 1));
 
@@ -484,7 +475,7 @@ bool Emitter :: instr_20(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return true;
 }
 
-bool Emitter :: instr_21(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_21(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD HL, $" << format("{:02X}",
 		(std::uint16_t) (((0xFF & mmu->read_byte(cpu->get_pc() + 2)) << 8) | (0xFF & mmu->read_byte(cpu->get_pc() + 1)))) << RESET << std::endl;
 	
@@ -497,7 +488,7 @@ bool Emitter :: instr_21(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_31(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_31(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD SP, $" << format("{:02X}",
 		(std::uint16_t) (((0xFF & mmu->read_byte(cpu->get_pc() + 2)) << 8) | (0xFF & mmu->read_byte(cpu->get_pc() + 1)))) << RESET << std::endl;
 	
@@ -508,7 +499,7 @@ bool Emitter :: instr_31(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_32(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_32(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD (HL-), A" << RESET << std::endl;
 
 	jit_save_frame(block, cpu, mmu);
@@ -525,7 +516,7 @@ bool Emitter :: instr_32(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_3e(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_3e(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD A, $" << format("{:02X}",
 		(std::uint8_t) ((0xFF & mmu->read_byte(cpu->get_pc() + 1)))) << RESET << std::endl;
 	
@@ -536,7 +527,7 @@ bool Emitter :: instr_3e(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_4f(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_4f(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD C, A" << RESET << std::endl;
 	
 	block->mov(C, A);
@@ -546,7 +537,7 @@ bool Emitter :: instr_4f(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_77(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_77(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD (HL), A" << RESET << std::endl;
 
 	jit_save_frame(block, cpu, mmu);
@@ -560,7 +551,7 @@ bool Emitter :: instr_77(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_af(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_af(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] XOR A, A" << RESET << std::endl;
 	
 	block->xor_(A, A);
@@ -581,7 +572,7 @@ bool Emitter :: instr_af(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_e0(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_e0(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD ($FF00+" << format("{:02X}", (std::uint8_t)
 		((0xFF & mmu->read_byte(cpu->get_pc() + 1)))) << "), A" << RESET << std::endl;
 	
@@ -601,7 +592,7 @@ bool Emitter :: instr_e0(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 
 	return false;
 }
-bool Emitter :: instr_e2(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_e2(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] LD ($FF00+C), A" << RESET << std::endl;
 	
 	jit_save_frame(block, cpu, mmu);
@@ -630,7 +621,7 @@ void debug(JitBlock *block)
     block->syscall();
 }
 
-bool Emitter :: instr_c5(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_c5(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] PUSH BC" << RESET << std::endl;
 
 	jit_save_frame(block, cpu, mmu);
@@ -655,7 +646,7 @@ bool Emitter :: instr_c5(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_cb7c(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_cb7c(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] BIT 7, H" << RESET << std::endl;
 
 	// Test bit 7 of CH (Maps to H)
@@ -686,7 +677,7 @@ bool Emitter :: instr_cb7c(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	return false;
 }
 
-bool Emitter :: instr_cd(JitBlock *block, Cpu *cpu, Mmu *mmu) {
+bool Amd64_Emitter :: instr_cd(JitBlock *block, Cpu *cpu, Mmu *mmu) {
 	std::cout << BOLDBLUE << "[JIT] CALL $" << format("{:04X}",
 		(std::uint16_t) (((0xFF & mmu->read_byte(cpu->get_pc() + 2)) << 8) | (0xFF & mmu->read_byte(cpu->get_pc() + 1)))) << RESET << std::endl;
 

@@ -1,13 +1,13 @@
 #pragma once
 
 #include <cstdint>
-#include <xbyak/xbyak.h>
+#include <cstddef>
 
 #define BLOCK_SZ_SAFE   128
 
 #define BLOCK_SIZE      BLOCK_SZ_SAFE
 
-class JitBlock : public Xbyak::CodeGenerator {
+class Block {
 
 private:
     // The Program Counter value that identifies the block
@@ -21,11 +21,11 @@ private:
 
 public:
 
-    JitBlock();
+    Block();
 
-    JitBlock(uint8_t id_, uint16_t pc_);
+    Block(uint8_t id_, uint16_t pc_);
 
-    ~JitBlock();
+    ~Block();
 
     bool is_dirty();
 
@@ -44,6 +44,4 @@ public:
     size_t get_size();
 
     const uint8_t *get_location();
-
-    void disassemble();
 };

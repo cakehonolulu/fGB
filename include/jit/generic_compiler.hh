@@ -2,8 +2,14 @@
 
 #include <cstdint>
 #include <iostream>
-#include <jit/emitter.hh>
-#include <jit/block.hh>
+#include <jit/generic_emitter.hh>
+#include <jit/generic_block.hh>
+
+#ifdef JIT_AMD64
+#include <jit/amd64/amd64_block.hh>
+#include <jit/amd64/amd64_emitter.hh>
+#endif
+
 #include <mmu/mmu.hh>
 #include <cpu/cpu.hh>
 #include <vector>
@@ -26,7 +32,9 @@ public:
 
     ~Compiler();
 
-    void run(Cpu *cpu, Emitter *emitter, Mmu *mmu);
+#ifdef JIT_AMD64
+    void run(Cpu *cpu, Amd64_Emitter *emitter, Mmu *mmu);
+#endif
 
     JitBlock *jit_find_compiled_block(std::uint16_t pc);
 
