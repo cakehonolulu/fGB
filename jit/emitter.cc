@@ -1,6 +1,6 @@
 #include <jit/emitter.hh>
 #include <jit/block.hh>
-#include <mmu.hh>
+#include <mmu/mmu.hh>
 #include <vector>
 #include <xbyak/xbyak.h>
 #include <fgb.hh>

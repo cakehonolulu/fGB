@@ -1,6 +1,6 @@
 #include <jit/compiler.hh>
 #include <jit/emitter.hh>
-#include <mmu.hh>
+#include <mmu/mmu.hh>
 #include <fgb.hh>
 #include <vector>
 #include <bitset>

@@ -1,8 +1,8 @@
 #include <jit/block.hh>
 #include <jit/compiler.hh>
 #include <fgb.hh>
-#include <cpu.hh>
-#include <mmu.hh>
+#include <cpu/cpu.hh>
+#include <mmu/mmu.hh>
 #include <iostream>
 #include <string>
 #include <vector>

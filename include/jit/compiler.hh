@@ -4,8 +4,8 @@
 #include <iostream>
 #include <jit/emitter.hh>
 #include <jit/block.hh>
-#include <mmu.hh>
-#include <cpu.hh>
+#include <mmu/mmu.hh>
+#include <cpu/cpu.hh>
 #include <vector>
 
 #define BLOCK_COUNT_SZ_SAFE 16

@@ -1,4 +1,4 @@
-#include <mmu.hh>
+#include <mmu/mmu.hh>
 #include <cstdio>
 
 Mmu :: Mmu(std::vector<char> *bootrom)

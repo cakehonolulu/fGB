@@ -1,4 +1,4 @@
-#include <cpu.hh>
+#include <cpu/cpu.hh>
 #include <fgb.hh>
 #include <iostream>
 #include <bitset>

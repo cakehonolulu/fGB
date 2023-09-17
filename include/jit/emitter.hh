@@ -1,8 +1,8 @@
 #pragma once
 
 #include <jit/block.hh>
-#include <mmu.hh>
-#include <cpu.hh>
+#include <mmu/mmu.hh>
+#include <cpu/cpu.hh>
 #include <cstdint>
 #include <vector>
 
