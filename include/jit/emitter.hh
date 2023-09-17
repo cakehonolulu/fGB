@@ -6,24 +6,76 @@
 #include <cstdint>
 #include <vector>
 
-#define A ah
-#define F al
-#define AF ax
+#define A   ah
+#define F   al
+#define AF  ax
 
-#define B bh
-#define C bl
-#define BC bx
+#define B   bh
+#define C   bl
+#define BC  bx
 
-#define D dh
-#define E dl
-#define DE dx
+#define D   dh
+#define E   dl
+#define DE  dx
 
-#define H ch
-#define L_ cl
-#define HL cx
+#define H   ch
+#define L_  cl
+#define HL  cx
 
-#define PC r9w
-#define SP r8w
+#define PC  r9w
+#define SP  r8w
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+/* Suitable for calling under MS ABI */
+#if _WIN32 || _WIN64
+    #if _WIN64
+// 64-bit
+#define arg1q    rcx
+#define arg2q    rdx
+#define arg3q    r8
+    #else
+        #define NO_64BIT
+    #endif
+#endif
+
+// 32-bit
+#define arg1d    ecx
+#define arg2d    edx
+#define arg3d    r8d
+// 16-bit
+#define arg1w    cx
+#define arg2w    dx
+#define arg3w    r8w
+// 8-bit
+#define arg1b    cl
+#define arg2b    dl
+#define arg3b    r8b
+#else
+/* Suitable for calling under SysV ABI */
+#if __GNUC__
+    #if __x86_64__ || __ppc64__
+// 64-bit
+#define arg1q    rdi
+#define arg2q    rsi
+#define arg3q    rdx
+    #else
+        #define NO_64BIT
+    #endif
+#endif
+
+// 32-bit
+#define arg1d    edi
+#define arg2d    esi
+#define arg3d    edx
+// 16-bit
+#define arg1w    di
+#define arg2w    si
+#define arg3w    dx
+// 8-bit
+#define arg1b    dil
+#define arg2b    sil
+#define arg3b    dl
+#endif
 
 class Emitter {
 
@@ -92,6 +144,20 @@ public:
     void jit_restore_frame(JitBlock *block, Cpu *cpu, Mmu *mmu);
     void jit_save_frame(JitBlock *block, Cpu *cpu, Mmu *mmu);
 
+    void handle_movz_arg(JitBlock* block, const Xbyak::Reg8& arg, std::uint8_t pos);
+
+    void handle_movz_arg(JitBlock* block, const Xbyak::Reg16& arg, std::uint8_t pos);
+
+    void handle_movz_arg(JitBlock* block, const Xbyak::Reg32& arg, std::uint8_t pos);
+
+    template <typename FuncType, typename Arg1Type>
+    void call_func_one_arg(JitBlock* block, Mmu* mmu, FuncType func, const Arg1Type& arg1);
+
+    template <typename FuncType, typename Arg1Type, typename Arg2Type>
+    void call_func_two_arg(JitBlock* block, Mmu* mmu, FuncType func, const Arg1Type& arg1, const Arg2Type& arg2);
+
+    template <typename FuncType, typename Arg1Type, typename Arg2Type, typename Arg3Type>
+    void call_func_three_arg(JitBlock* block, Mmu* mmu, FuncType func, const Arg1Type& arg1, const Arg2Type& arg2, const Arg3Type& arg3);
 
     bool instr_06(JitBlock *block, Cpu *cpu, Mmu *mmu);
     bool instr_0c(JitBlock *block, Cpu *cpu, Mmu *mmu);

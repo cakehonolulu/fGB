@@ -57,10 +57,7 @@ void Compiler :: run(Cpu *cpu, Emitter *emitter, Mmu *mmu) {
 
                 new_block->execute();
 
-
-                
-
-                cpu->print_regs();
+                //cpu->print_regs();
                 
                 //sleep(1);
 
